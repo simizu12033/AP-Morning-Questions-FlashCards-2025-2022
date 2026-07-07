@@ -350,7 +350,8 @@ const easyReplacements = [
   ["改ざん", "勝手に書き換えること"],
   ["実行コード", "実際に動くプログラム"],
   ["独立サービス", "それぞれ単独で動かせる小さなサービス"],
-  ["階層分解", "上から下へ細かく分けること"],
+  ["階層分解する", "上から下へ細かく分ける"],
+  ["階層分解", "上から下へ細かく分ける"],
   ["作業パッケージ", "具体的な作業の単位"],
   ["恒久対策", "一時しのぎではない対策"],
   ["全体最適", "一部だけでなく全体として良くすること"],
@@ -510,6 +511,591 @@ function clueLabel(card, family) {
   return "働き";
 }
 
+function conceptPiece(cls, label, sub = "") {
+  const body = sub ? `<small>${esc(sub)}</small>` : "";
+  return `<div class="concept-piece ${cls}"><b>${esc(label)}</b>${body}</div>`;
+}
+
+function conceptDiagram(head, cls, pieces) {
+  return `<div class="memory-visual concept-visual ${cls}">${head}<div class="concept-scene ${cls}">${pieces.join("")}</div></div>`;
+}
+
+function safeClass(value) {
+  return String(value).toLowerCase().replace(/[^a-z0-9_-]+/g, "-");
+}
+
+function stableNumber(value) {
+  let hash = 0;
+  for (const char of String(value)) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return hash;
+}
+
+function autoDiagram(card, head, answer, family) {
+  const familyLabel = {
+    trust: "信用を確かめる",
+    security: "攻撃・防御を見分ける",
+    data: "データの置き方",
+    system: "仕組みを動かす",
+    strategy: "判断の軸を作る",
+    cycle: "流れの中で使う",
+    mechanism: "働きで覚える",
+  }[family] || "働きで覚える";
+  const roleLabel = clueLabel(card, family);
+  const layouts = ["stack", "radar", "lane", "gate", "target", "map", "split", "deck", "meter", "ladder", "lab", "stamp"];
+  const layout = layouts[stableNumber(`${card.id}:${card.visual}`) % layouts.length];
+  const cls = `auto-concept auto-layout-${layout} auto-${safeClass(family)} auto-${safeClass(card.visual)} auto-card-${safeClass(card.id)}`;
+  const pieces = {
+    stack: [
+      conceptPiece("auto-topic top", card.category, "出題分野"),
+      conceptPiece("auto-memory wide-card", easyText(card.memory), "覚えどころ"),
+      conceptPiece("auto-role accent", roleLabel, familyLabel),
+      conceptPiece("auto-answer", answer, "回答後に用語名")
+    ],
+    radar: [
+      conceptPiece("auto-role accent center", roleLabel, familyLabel),
+      conceptPiece("auto-topic node-a", card.category, "分野"),
+      conceptPiece("auto-memory node-b", easyText(card.memory), "合図"),
+      conceptPiece("auto-answer node-c", answer, "答え")
+    ],
+    lane: [
+      conceptPiece("auto-topic step-a", "入口", card.category),
+      conceptPiece("auto-role accent step-b", roleLabel, familyLabel),
+      conceptPiece("auto-memory step-c", easyText(card.memory), "選択肢を切る"),
+      conceptPiece("auto-answer step-d", answer, "答え")
+    ],
+    gate: [
+      conceptPiece("auto-topic", card.category, "条件"),
+      conceptPiece("auto-role accent gate-core", roleLabel, "判定"),
+      conceptPiece("auto-memory", easyText(card.memory), "通す手掛かり"),
+      conceptPiece("auto-answer", answer, "名前")
+    ],
+    target: [
+      conceptPiece("auto-role accent target-core", roleLabel, familyLabel),
+      conceptPiece("auto-topic ring-one", card.category, "外側の文脈"),
+      conceptPiece("auto-memory ring-two", easyText(card.memory), "中心の合図"),
+      conceptPiece("auto-answer ring-three", answer, "最後に答える")
+    ],
+    map: [
+      conceptPiece("auto-topic map-start", card.category, "ここから"),
+      conceptPiece("auto-memory map-mid", easyText(card.memory), "こう見分ける"),
+      conceptPiece("auto-role accent map-key", roleLabel, familyLabel),
+      conceptPiece("auto-answer map-goal", answer, "到達点")
+    ],
+    split: [
+      conceptPiece("auto-topic before", "問題文の手掛かり", card.category),
+      conceptPiece("auto-memory after accent", easyText(card.memory), "読み替える"),
+      conceptPiece("auto-role bridge", roleLabel, familyLabel),
+      conceptPiece("auto-answer result", answer, "答え")
+    ],
+    deck: [
+      conceptPiece("auto-topic card-one", card.category, "1枚目"),
+      conceptPiece("auto-role accent card-two", roleLabel, "2枚目"),
+      conceptPiece("auto-memory card-three", easyText(card.memory), "3枚目"),
+      conceptPiece("auto-answer card-four", answer, "答え")
+    ],
+    meter: [
+      conceptPiece("auto-topic meter-label", card.category, "観点"),
+      conceptPiece("auto-role accent meter-needle", roleLabel, familyLabel),
+      conceptPiece("auto-memory meter-read", easyText(card.memory), "針が指す合図"),
+      conceptPiece("auto-answer meter-name", answer, "名前")
+    ],
+    ladder: [
+      conceptPiece("auto-topic rung-a", card.category, "下段"),
+      conceptPiece("auto-memory rung-b", easyText(card.memory), "中段"),
+      conceptPiece("auto-role accent rung-c", roleLabel, familyLabel),
+      conceptPiece("auto-answer rung-d", answer, "上段")
+    ],
+    lab: [
+      conceptPiece("auto-topic lab-sample", card.category, "材料"),
+      conceptPiece("auto-memory lab-flask", easyText(card.memory), "反応"),
+      conceptPiece("auto-role accent lab-result", roleLabel, familyLabel),
+      conceptPiece("auto-answer lab-label", answer, "ラベル")
+    ],
+    stamp: [
+      conceptPiece("auto-topic paper-card", card.category, "問題文"),
+      conceptPiece("auto-role accent stamp-card", roleLabel, "印を押す"),
+      conceptPiece("auto-memory memo-card", easyText(card.memory), "理由"),
+      conceptPiece("auto-answer name-card", answer, "用語名")
+    ],
+  }[layout];
+  return conceptDiagram(head, cls, pieces);
+}
+
+function specificDiagram(card, head, answer, family) {
+  const visual = card.visual;
+  const raw = card.answer;
+  const reveal = answer === esc(raw);
+
+  if (visual === "nosql") {
+    return conceptDiagram(head, "concept-nosql", [
+      conceptPiece("rel-table muted", "行と列", "だけではない"),
+      conceptPiece("kv-card", "キー → 値"),
+      conceptPiece("doc-card", "{ 文書 }"),
+      conceptPiece("graph-card", "点と線"),
+      conceptPiece("wide-card accent", reveal ? raw : "柔軟なDB群", "分散・大量データ")
+    ]);
+  }
+
+  if (visual === "crc" && raw.includes("垂直水平")) {
+    return conceptDiagram(head, "concept-parity-grid", [
+      conceptPiece("bit-grid", "データを格子に並べる"),
+      conceptPiece("row-check accent", "行の偶奇"),
+      conceptPiece("col-check accent", "列の偶奇"),
+      conceptPiece("error-cell", "交点で誤り位置")
+    ]);
+  }
+
+  if (visual === "view") {
+    return conceptDiagram(head, "concept-view", [
+      conceptPiece("base-table", "実表", "全列・全行を持つ"),
+      conceptPiece("filter-slit", "必要な列だけ", "切り出す"),
+      conceptPiece("window-card accent", reveal ? raw : "見せる窓", "実データは持たない"),
+      conceptPiece("user-card", "利用者", "表のように見る")
+    ]);
+  }
+
+  if (visual === "mvcc") {
+    return conceptDiagram(head, "concept-mvcc", [
+      conceptPiece("version old", "版1", "読取り中"),
+      conceptPiece("reader-card", "読む人", "古い版を見る"),
+      conceptPiece("version new", "版2", "更新中"),
+      conceptPiece("writer-card", "書く人", "新しい版を作る"),
+      conceptPiece("wide-card accent", reveal ? raw : "版を分ける", "衝突しにくい")
+    ]);
+  }
+
+  if (visual === "fishbone" && raw.includes("FTA")) {
+    return conceptDiagram(head, "concept-fault-tree", [
+      conceptPiece("top-event accent", "頂上事象", "起きてほしくない故障"),
+      conceptPiece("gate-card", "AND/OR"),
+      conceptPiece("cause-card", "原因A"),
+      conceptPiece("cause-card", "原因B")
+    ]);
+  }
+
+  if (visual === "objectStorage") {
+    return conceptDiagram(head, "concept-object", [
+      conceptPiece("object-card", "ファイル"),
+      conceptPiece("id-tag", "一意なID"),
+      conceptPiece("bucket-card accent", reveal ? raw : "入れ物", "階層よりIDで探す"),
+      conceptPiece("meta-card", "メタ情報")
+    ]);
+  }
+
+  if (visual === "checkpoint") {
+    return conceptDiagram(head, "concept-checkpoint", [
+      conceptPiece("log-card", "ログ"),
+      conceptPiece("pin-card accent", reveal ? raw : "復旧地点"),
+      conceptPiece("crash-card", "障害"),
+      conceptPiece("restore-card", "ここから再開")
+    ]);
+  }
+
+  if (visual === "storedProcedure") {
+    return conceptDiagram(head, "concept-procedure", [
+      conceptPiece("app-card", "アプリ"),
+      conceptPiece("db-code accent", reveal ? raw : "DB内の処理"),
+      conceptPiece("table-card", "表"),
+      conceptPiece("return-card", "結果だけ返す")
+    ]);
+  }
+
+  if (visual === "coalesce") {
+    return conceptDiagram(head, "concept-coalesce", [
+      conceptPiece("null-card", "NULL"),
+      conceptPiece("choice-card accent", reveal ? raw : "最初の値を選ぶ"),
+      conceptPiece("value-card", "代替値"),
+      conceptPiece("ok-card", "空欄を避ける")
+    ]);
+  }
+
+  if (visual === "starSchema") {
+    return conceptDiagram(head, "concept-star", [
+      conceptPiece("center-fact accent", reveal ? raw : "売上などの事実"),
+      conceptPiece("dim-card d1", "商品"),
+      conceptPiece("dim-card d2", "顧客"),
+      conceptPiece("dim-card d3", "時間"),
+      conceptPiece("dim-card d4", "店舗")
+    ]);
+  }
+
+  if (visual === "data") {
+    if (raw.includes("外部キー")) return conceptDiagram(head, "concept-foreign-key", [
+      conceptPiece("parent-table", "親表", "主キー"),
+      conceptPiece("child-table accent", "子表", reveal ? raw : "親の番号を持つ"),
+      conceptPiece("link-card", "関係を保つ")
+    ]);
+    if (raw.includes("バックアップ")) return conceptDiagram(head, "concept-diff-backup", [
+      conceptPiece("full-card", "フル", "月曜"),
+      conceptPiece("change-card accent", "変更分だけ", "火曜以降"),
+      conceptPiece("restore-card", "復元", "フル + 差分")
+    ]);
+    if (raw.includes("ライトスルー")) return conceptDiagram(head, "concept-write-through", [
+      conceptPiece("cpu-card", "CPU"),
+      conceptPiece("cache-card accent", "キャッシュ"),
+      conceptPiece("memory-card", "主記憶"),
+      conceptPiece("wide-card", "同時に書く", "遅いが安全")
+    ]);
+    if (raw.includes("ページング")) return conceptDiagram(head, "concept-paging", [
+      conceptPiece("memory-block", "ページ0"),
+      conceptPiece("memory-block", "ページ1"),
+      conceptPiece("memory-block accent", "固定長"),
+      conceptPiece("frame-card", "枠に入れる")
+    ]);
+    if (raw.includes("フラッシュ")) return conceptDiagram(head, "concept-flash", [
+      conceptPiece("cell-card", "セル"),
+      conceptPiece("charge-card accent", "電荷を保持"),
+      conceptPiece("power-card", "電源OFF"),
+      conceptPiece("keep-card", "消えない")
+    ]);
+    if (raw.includes("ACID")) return conceptDiagram(head, "concept-acid", [
+      conceptPiece("acid-a", "A", "全部か無か"),
+      conceptPiece("acid-c", "C", "つじつま"),
+      conceptPiece("acid-i", "I", "独立"),
+      conceptPiece("acid-d", "D", "消えない")
+    ]);
+    if (raw.includes("フルアソシエイティブ")) return conceptDiagram(head, "concept-cache-map", [
+      conceptPiece("block-card", "主記憶ブロック"),
+      conceptPiece("any-card accent", "どこへも置ける"),
+      conceptPiece("cache-line", "キャッシュ枠")
+    ]);
+    if (raw.includes("フラグメンテーション")) return conceptDiagram(head, "concept-fragment", [
+      conceptPiece("used-card", "使用中"),
+      conceptPiece("gap-card accent", "小さな空き"),
+      conceptPiece("used-card", "使用中"),
+      conceptPiece("gap-card", "また空き")
+    ]);
+    if (raw.includes("CAP")) return conceptDiagram(head, "concept-cap", [
+      conceptPiece("cap-c", "C", "一貫性"),
+      conceptPiece("cap-a", "A", "可用性"),
+      conceptPiece("cap-p accent", "P", "分断耐性"),
+      conceptPiece("wide-card", "三つ全部は無理")
+    ]);
+    if (raw.includes("3層スキーマ")) return conceptDiagram(head, "concept-schema3", [
+      conceptPiece("schema-card", "外部", "利用者ごと"),
+      conceptPiece("schema-card accent", "概念", "全体の形"),
+      conceptPiece("schema-card", "内部", "保存方法")
+    ]);
+    if (raw.includes("undo") || raw.includes("redo")) return conceptDiagram(head, "concept-undo-redo", [
+      conceptPiece("uncommitted", "未完了", "undoで戻す"),
+      conceptPiece("committed accent", "完了済み", "redoでやり直す"),
+      conceptPiece("log-card", "ログで復旧")
+    ]);
+    if (raw.includes("データ管理者")) return conceptDiagram(head, "concept-data-admin", [
+      conceptPiece("rule-card accent", "データのルール"),
+      conceptPiece("quality-card", "品質"),
+      conceptPiece("owner-card", "責任者"),
+      conceptPiece("table-card", "利用部門")
+    ]);
+    if (raw.includes("XBRL")) return conceptDiagram(head, "concept-xbrl", [
+      conceptPiece("finance-card", "財務情報"),
+      conceptPiece("tag-card accent", "タグを付ける"),
+      conceptPiece("machine-card", "機械で読める")
+    ]);
+  }
+
+  if (visual === "system") {
+    if (raw.includes("Linuxカーネル")) return conceptDiagram(head, "concept-kernel", [
+      conceptPiece("app-card", "アプリ"),
+      conceptPiece("kernel-card accent", reveal ? raw : "OSの中核"),
+      conceptPiece("resource-card", "CPU・メモリ")
+    ]);
+    if (raw.includes("レンダリング")) return conceptDiagram(head, "concept-render", [
+      conceptPiece("model-card", "形"),
+      conceptPiece("light-card", "光"),
+      conceptPiece("image-card accent", "画像を描く")
+    ]);
+    if (raw.includes("レイトレーシング")) return conceptDiagram(head, "concept-raytrace", [
+      conceptPiece("eye-card", "視点"),
+      conceptPiece("ray-card accent", "光線を追う"),
+      conceptPiece("mirror-card", "反射・影"),
+      conceptPiece("image-card", "リアルな画像")
+    ]);
+    if (raw.includes("NAPT")) return conceptDiagram(head, "concept-napt", [
+      conceptPiece("lan-card", "内側IP:ポート"),
+      conceptPiece("translate-card accent", "変換"),
+      conceptPiece("wan-card", "外側IP:ポート")
+    ]);
+    if (raw.includes("マルチキャスト")) return conceptDiagram(head, "concept-multicast", [
+      conceptPiece("sender-card", "送信元"),
+      conceptPiece("group-card accent", "参加グループ"),
+      conceptPiece("receiver-card", "複数宛先")
+    ]);
+    if (raw.includes("IDE")) return conceptDiagram(head, "concept-ide", [
+      conceptPiece("tool-card", "編集"),
+      conceptPiece("tool-card", "実行"),
+      conceptPiece("tool-card", "デバッグ"),
+      conceptPiece("wide-card accent", "開発道具を一体化")
+    ]);
+    if (raw.includes("スケールイン")) return conceptDiagram(head, "concept-scale-in", [
+      conceptPiece("server-card", "台数多い"),
+      conceptPiece("minus-card accent", "減らす"),
+      conceptPiece("server-card", "小さく運用")
+    ]);
+    if (raw.includes("コンテナ")) return conceptDiagram(head, "concept-container", [
+      conceptPiece("kernel-card", "共有OS"),
+      conceptPiece("box-card accent", "アプリA"),
+      conceptPiece("box-card", "アプリB"),
+      conceptPiece("wide-card", "環境を隔離")
+    ]);
+    if (raw.includes("サブミッション")) return conceptDiagram(head, "concept-mail587", [
+      conceptPiece("mail-card", "メール投稿"),
+      conceptPiece("port-card accent", "587"),
+      conceptPiece("server-card", "送信用サーバ")
+    ]);
+    if (raw.includes("GPU")) return conceptDiagram(head, "concept-gpu", [
+      conceptPiece("task-card", "同じ計算"),
+      conceptPiece("many-core accent", "大量の小コア"),
+      conceptPiece("image-card", "並列処理")
+    ]);
+    if (raw.includes("DHCP")) return conceptDiagram(head, "concept-dhcp", [
+      conceptPiece("client-card", "端末"),
+      conceptPiece("server-card accent", "IP設定を配る"),
+      conceptPiece("ip-card", "IP/マスク/GW")
+    ]);
+    if (raw.includes("APIエコノミー")) return conceptDiagram(head, "concept-api-economy", [
+      conceptPiece("service-card", "自社サービス"),
+      conceptPiece("api-card accent", "API公開"),
+      conceptPiece("partner-card", "外部が連携")
+    ]);
+    if (raw.includes("PPPoE")) return conceptDiagram(head, "concept-pppoe", [
+      conceptPiece("ether-card", "Ethernet"),
+      conceptPiece("ppp-card accent", "PPPを通す"),
+      conceptPiece("provider-card", "接続先")
+    ]);
+    if (raw.includes("VDI")) return conceptDiagram(head, "concept-vdi", [
+      conceptPiece("thin-card", "手元端末"),
+      conceptPiece("server-card accent", "デスクトップ実体"),
+      conceptPiece("screen-card", "画面だけ操作")
+    ]);
+  }
+
+  if (visual === "security") {
+    if (raw.includes("レインボー")) return conceptDiagram(head, "concept-rainbow", [
+      conceptPiece("hash-card", "ハッシュ"),
+      conceptPiece("table-card accent", "事前計算表"),
+      conceptPiece("password-card", "逆引き")
+    ]);
+    if (raw.includes("ランサム")) return conceptDiagram(head, "concept-ransom", [
+      conceptPiece("file-card", "ファイル"),
+      conceptPiece("lock-card accent", "読めない形"),
+      conceptPiece("money-card", "身代金要求")
+    ]);
+    if (raw.includes("C&C")) return conceptDiagram(head, "concept-cc", [
+      conceptPiece("boss-card accent", "司令塔"),
+      conceptPiece("bot-card", "感染端末"),
+      conceptPiece("command-card", "命令")
+    ]);
+    if (raw.includes("ファジング")) return conceptDiagram(head, "concept-fuzzing", [
+      conceptPiece("input-card", "変な入力を大量投入"),
+      conceptPiece("app-card accent", "対象ソフト"),
+      conceptPiece("bug-card", "弱点を発見")
+    ]);
+    if (raw.includes("不正アクセス")) return conceptDiagram(head, "concept-illegal-access", [
+      conceptPiece("credential-card", "他人の認証情報"),
+      conceptPiece("door-card accent", "勝手に入る"),
+      conceptPiece("law-card", "法律で規制")
+    ]);
+  }
+
+  if (visual === "trust") {
+    if (raw.includes("楕円曲線")) return conceptDiagram(head, "concept-ecc", [
+      conceptPiece("key-card", "短い鍵"),
+      conceptPiece("curve-card accent", "曲線上の計算"),
+      conceptPiece("lock-card", "公開鍵暗号")
+    ]);
+    if (raw.includes("セキュアブート")) return conceptDiagram(head, "concept-secure-boot", [
+      conceptPiece("power-card", "起動"),
+      conceptPiece("sign-card accent", "署名確認"),
+      conceptPiece("os-card", "改ざんなら止める")
+    ]);
+    if (raw.includes("セキュアOS")) return conceptDiagram(head, "concept-secure-os", [
+      conceptPiece("user-card", "利用者"),
+      conceptPiece("policy-card accent", "強い権限制御"),
+      conceptPiece("resource-card", "資源")
+    ]);
+    if (raw.includes("ISMAP")) return conceptDiagram(head, "concept-ismap", [
+      conceptPiece("cloud-card", "クラウド"),
+      conceptPiece("check-card accent", "政府の安全評価"),
+      conceptPiece("list-card", "登録")
+    ]);
+    if (raw.includes("TPM")) return conceptDiagram(head, "concept-tpm", [
+      conceptPiece("chip-card accent", "安全チップ"),
+      conceptPiece("key-card", "鍵を保護"),
+      conceptPiece("pc-card", "PC")
+    ]);
+    if (raw.includes("情報銀行")) return conceptDiagram(head, "concept-info-bank", [
+      conceptPiece("person-card", "本人"),
+      conceptPiece("delegate-card accent", "委任"),
+      conceptPiece("data-card", "個人データ提供")
+    ]);
+    if (raw.includes("チャレンジレスポンス")) return conceptDiagram(head, "concept-challenge", [
+      conceptPiece("challenge-card", "乱数の質問"),
+      conceptPiece("secret-card accent", "秘密で計算"),
+      conceptPiece("response-card", "答えだけ送る")
+    ]);
+  }
+
+  if (visual === "mechanism") {
+    if (raw.includes("ウェアレベリング")) return conceptDiagram(head, "concept-wear", [
+      conceptPiece("cell-card", "セルA"),
+      conceptPiece("rotate-card accent", "書込みを分散"),
+      conceptPiece("cell-card", "セルB"),
+      conceptPiece("life-card", "寿命を延ばす")
+    ]);
+    if (raw.includes("LiDAR")) return conceptDiagram(head, "concept-lidar", [
+      conceptPiece("laser-card accent", "レーザー"),
+      conceptPiece("reflect-card", "反射"),
+      conceptPiece("distance-card", "距離を測る")
+    ]);
+    if (raw.includes("べき等")) return conceptDiagram(head, "concept-idempotent", [
+      conceptPiece("once-card", "1回実行"),
+      conceptPiece("many-card accent", "何回実行"),
+      conceptPiece("same-card", "結果は同じ")
+    ]);
+    if (raw.includes("エネルギーハーベスティング")) return conceptDiagram(head, "concept-harvest", [
+      conceptPiece("sun-card", "光"),
+      conceptPiece("vibe-card", "振動"),
+      conceptPiece("collect-card accent", "小電力を集める")
+    ]);
+    if (raw.includes("電子ペーパー")) return conceptDiagram(head, "concept-epaper", [
+      conceptPiece("particle-card", "帯電粒子"),
+      conceptPiece("field-card accent", "電気で移動"),
+      conceptPiece("display-card", "表示を保つ")
+    ]);
+  }
+
+  if (visual === "strategy" || visual === "cycle") {
+    if (raw.includes("バックキャスティング")) return conceptDiagram(head, "concept-backcasting", [
+      conceptPiece("future-card accent", "ありたい未来"),
+      conceptPiece("reverse-card", "逆算"),
+      conceptPiece("today-card", "今やること")
+    ]);
+    if (raw.includes("パーミッション")) return conceptDiagram(head, "concept-permission", [
+      conceptPiece("customer-card", "顧客"),
+      conceptPiece("ok-card accent", "同意"),
+      conceptPiece("message-card", "売込み")
+    ]);
+    if (raw.includes("ギグ")) return conceptDiagram(head, "concept-gig", [
+      conceptPiece("platform-card accent", "ネット仲介"),
+      conceptPiece("short-job", "単発仕事"),
+      conceptPiece("worker-card", "働き手")
+    ]);
+    if (raw.includes("コンティンジェンシー")) return conceptDiagram(head, "concept-contingency-theory", [
+      conceptPiece("situation-card", "状況A"),
+      conceptPiece("fit-card accent", "合う管理"),
+      conceptPiece("situation-card", "状況B")
+    ]);
+    if (raw.includes("ROC")) return conceptDiagram(head, "concept-roc", [
+      conceptPiece("axis-card", "偽陽性率"),
+      conceptPiece("curve-card accent", "曲線"),
+      conceptPiece("axis-card", "真陽性率")
+    ]);
+    if (raw.includes("決定表")) return conceptDiagram(head, "concept-decision-table", [
+      conceptPiece("condition-card", "条件1/2"),
+      conceptPiece("rule-card accent", "組合せ"),
+      conceptPiece("action-card", "処理")
+    ]);
+    if (raw.includes("戦略マップ")) return conceptDiagram(head, "concept-strategy-map", [
+      conceptPiece("goal-card", "財務"),
+      conceptPiece("goal-card accent", "顧客"),
+      conceptPiece("goal-card", "業務"),
+      conceptPiece("link-card", "因果でつなぐ")
+    ]);
+    if (raw.includes("集団思考")) return conceptDiagram(head, "concept-groupthink", [
+      conceptPiece("team-card accent", "まとまり過ぎ"),
+      conceptPiece("silence-card", "反対が出ない"),
+      conceptPiece("bad-card", "判断が鈍る")
+    ]);
+    if (raw.includes("ターゲットリターン")) return conceptDiagram(head, "concept-target-return", [
+      conceptPiece("profit-card", "目標利益"),
+      conceptPiece("cost-card", "原価"),
+      conceptPiece("price-card accent", "価格を決める")
+    ]);
+    if (raw.includes("コンジョイント")) return conceptDiagram(head, "concept-conjoint", [
+      conceptPiece("attr-card", "価格"),
+      conceptPiece("attr-card", "機能"),
+      conceptPiece("choice-card accent", "好みを分解")
+    ]);
+    if (raw.includes("ファブレス")) return conceptDiagram(head, "concept-fabless", [
+      conceptPiece("design-card accent", "設計に集中"),
+      conceptPiece("factory-card", "製造は外部"),
+      conceptPiece("product-card", "製品")
+    ]);
+    if (raw.includes("SL理論")) return conceptDiagram(head, "concept-sl-theory", [
+      conceptPiece("member-card", "部下の成熟度"),
+      conceptPiece("style-card accent", "指示/説得/参加/委任"),
+      conceptPiece("fit-card", "相手に合わせる")
+    ]);
+    if (raw.includes("PM理論")) return conceptDiagram(head, "concept-pm-theory", [
+      conceptPiece("axis-card", "成果"),
+      conceptPiece("axis-card accent", "人への配慮"),
+      conceptPiece("matrix-card", "PとMの二軸")
+    ]);
+  }
+
+  if (visual === "cycle") {
+    if (raw.includes("スコープ")) return conceptDiagram(head, "concept-scope", [
+      conceptPiece("in-card accent", "含める"),
+      conceptPiece("out-card", "含めない"),
+      conceptPiece("doc-card", "文書化")
+    ]);
+    if (raw.includes("オープンイノベーション")) return conceptDiagram(head, "concept-open-innovation", [
+      conceptPiece("inside-card", "社内"),
+      conceptPiece("outside-card accent", "外部の知恵"),
+      conceptPiece("new-card", "新価値")
+    ]);
+    if (raw.includes("レジリエンス")) return conceptDiagram(head, "concept-resilience", [
+      conceptPiece("shock-card", "障害"),
+      conceptPiece("bend-card accent", "耐える"),
+      conceptPiece("recover-card", "戻る")
+    ]);
+    if (raw.includes("クリティカルチェーン")) return conceptDiagram(head, "concept-critical-chain", [
+      conceptPiece("task-card", "作業列"),
+      conceptPiece("resource-card accent", "資源制約"),
+      conceptPiece("buffer-card", "バッファ")
+    ]);
+    if (raw.includes("デルファイ")) return conceptDiagram(head, "concept-delphi", [
+      conceptPiece("expert-card", "匿名専門家"),
+      conceptPiece("round-card accent", "繰返し集約"),
+      conceptPiece("consensus-card", "見込み")
+    ]);
+    if (raw.includes("トレーサビリティ")) return conceptDiagram(head, "concept-trace", [
+      conceptPiece("req-card", "要求"),
+      conceptPiece("design-card accent", "設計"),
+      conceptPiece("test-card", "テスト"),
+      conceptPiece("link-card", "対応を追う")
+    ]);
+    if (raw.includes("RFI")) return conceptDiagram(head, "concept-rfi", [
+      conceptPiece("info-card accent", "情報依頼"),
+      conceptPiece("vendor-card", "候補企業"),
+      conceptPiece("rfp-card", "RFP前")
+    ]);
+    if (raw.includes("リスクアセスメント")) return conceptDiagram(head, "concept-risk-assessment", [
+      conceptPiece("find-card", "見つける"),
+      conceptPiece("analyze-card accent", "分析"),
+      conceptPiece("evaluate-card", "評価")
+    ]);
+    if (raw.includes("KPT")) return conceptDiagram(head, "concept-kpt", [
+      conceptPiece("keep-card", "Keep"),
+      conceptPiece("problem-card accent", "Problem"),
+      conceptPiece("try-card", "Try")
+    ]);
+    if (raw.includes("EVM")) return conceptDiagram(head, "concept-evm", [
+      conceptPiece("progress-card", "出来高"),
+      conceptPiece("cost-card accent", "コスト"),
+      conceptPiece("schedule-card", "進捗")
+    ]);
+    if (raw.includes("かんばん")) return conceptDiagram(head, "concept-kanban", [
+      conceptPiece("later-card accent", "後工程"),
+      conceptPiece("pull-card", "必要分だけ引く"),
+      conceptPiece("stock-card", "在庫を抑える")
+    ]);
+  }
+
+  return "";
+}
+
 function diagramV2(card, reveal = false) {
   const memory = esc(easyText(card.memory));
   const visual = card.visual;
@@ -517,6 +1103,8 @@ function diagramV2(card, reveal = false) {
   const answer = esc(reveal ? card.answer : clueLabel(card, family));
   const headTitle = esc(reveal ? card.answer : "図で覚えるポイント");
   const head = `<div class="visual-head"><span class="visual-kind">${esc(card.category)}</span><strong>${headTitle}</strong><p>${memory}</p></div>`;
+  const specific = specificDiagram(card, head, answer, family);
+  if (specific) return specific;
 
   if (visual === "crc") {
     return `<div class="memory-visual crc-visual">${head}<div class="crc-board">
@@ -554,45 +1142,30 @@ function diagramV2(card, reveal = false) {
   }
 
   if (family === "trust") {
-    return `<div class="memory-visual trust-visual">${head}<div class="trust-scene">
-      <div class="cert-doc">証明書</div><div class="stamp">${answer}</div><div class="trust-meter"><span></span><b>信用できるか判定</b></div>
-    </div></div>`;
+    return autoDiagram(card, head, answer, family);
   }
 
   if (family === "security") {
-    return `<div class="memory-visual security-visual">${head}<div class="security-scene">
-      <div class="threat-dot">脅威</div><div class="shield-card">${answer}</div><div class="asset-stack"><span></span><span></span><b>守る対象</b></div>
-    </div></div>`;
+    return autoDiagram(card, head, answer, family);
   }
 
   if (family === "data") {
-    return `<div class="memory-visual data-visual">${head}<div class="data-scene">
-      <div class="table-sheet"><i></i><i></i><i></i></div><div class="db-cylinder">${answer}</div><div class="doc-pile"><span></span><span></span><span></span></div>
-    </div></div>`;
+    return autoDiagram(card, head, answer, family);
   }
 
   if (family === "system") {
-    return `<div class="memory-visual system-visual">${head}<div class="system-scene">
-      <div class="code-page">仕様<br>コード</div><div class="gear-core">${answer}</div><div class="cloud-nodes"><span></span><span></span><span></span></div>
-    </div></div>`;
+    return autoDiagram(card, head, answer, family);
   }
 
   if (family === "strategy") {
-    return `<div class="memory-visual strategy-visual">${head}<div class="strategy-scene">
-      <div class="matrix-card"><span>軸A</span><span>軸B</span><span>比較</span><strong>${answer}</strong></div>
-      <div class="decision-chip">選択肢を分類</div>
-    </div></div>`;
+    return autoDiagram(card, head, answer, family);
   }
 
   if (family === "cycle") {
-    return `<div class="memory-visual cycle-visual">${head}<div class="cycle-scene">
-      <span>計画</span><span>実行</span><strong>${answer}</strong><span>確認</span><span>改善</span>
-    </div></div>`;
+    return autoDiagram(card, head, answer, family);
   }
 
-  return `<div class="memory-visual mechanism-visual">${head}<div class="mechanism-scene">
-    <div class="signal-dial">入力</div><div class="core-badge">${answer}</div><div class="result-dial">結果</div>
-  </div></div>`;
+  return autoDiagram(card, head, answer, family);
 }
 
 function diagram(card) {
