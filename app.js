@@ -267,7 +267,7 @@ function esc(value) {
 const easyReplacements = [
   ["インフラ構成", "サーバやネットワークの設定"],
   ["実行環境", "動かすための環境"],
-  ["再現", "同じように作ること"],
+  ["再現", "再作成"],
   ["変更管理", "変更を記録して管理すること"],
   ["複数スレッド", "複数の処理"],
   ["不整合", "食い違い"],
@@ -478,12 +478,45 @@ function visualFamily(visual) {
   return "mechanism";
 }
 
+function clueLabel(card, family) {
+  const visual = card.visual;
+  if (visual === "crc") return "余りチェック";
+  if (visual === "sideChannel") return "横から漏れる情報";
+  if (visual === "stp") return "ループを止める";
+  if (visual === "fishbone") return "原因を整理";
+  if (["crl", "ocsp"].includes(visual)) return "失効を確認";
+  if (["dnssec", "spf", "secureCookie", "saml", "threeDS", "3ds"].includes(visual)) return "本物か確認";
+  if (["waf", "cspm", "forensics", "psirt", "sbom", "cve"].includes(visual)) return "守る・調べる";
+  if (["commandInjection", "dnsPoison", "passwordList", "exploit"].includes(visual)) return "攻撃の型";
+  if (visual === "view") return "仮想の見せ方";
+  if (visual === "mvcc") return "複数の版";
+  if (visual === "starSchema") return "分析用の表";
+  if (visual === "objectStorage") return "IDで保存";
+  if (visual === "coalesce") return "NULLを避ける";
+  if (visual === "storedProcedure") return "DB内の処理";
+  if (visual === "checkpoint") return "復旧地点";
+  if (["iac", "provisioning"].includes(visual)) return "環境を用意";
+  if (visual === "sdn") return "通信を制御";
+  if (visual === "edge") return "近くで処理";
+  if (visual === "digitalTwin") return "現実の写し";
+  if (visual === "openapi") return "API仕様";
+  if (visual === "docGenerator") return "文書を生成";
+  if (family === "strategy") return "分類の型";
+  if (family === "cycle") return "流れの中心";
+  if (family === "data") return "データの仕組み";
+  if (family === "system") return "動かす仕組み";
+  if (family === "trust") return "信用の確認";
+  if (family === "security") return "守る仕組み";
+  return "働き";
+}
+
 function diagramV2(card, reveal = false) {
-  const answer = esc(reveal ? card.answer : "？？？");
   const memory = esc(easyText(card.memory));
   const visual = card.visual;
   const family = visualFamily(visual);
-  const head = `<div class="visual-head"><span class="visual-kind">${esc(card.category)}</span><strong>${answer}</strong><p>${memory}</p></div>`;
+  const answer = esc(reveal ? card.answer : clueLabel(card, family));
+  const headTitle = esc(reveal ? card.answer : "図で覚えるポイント");
+  const head = `<div class="visual-head"><span class="visual-kind">${esc(card.category)}</span><strong>${headTitle}</strong><p>${memory}</p></div>`;
 
   if (visual === "crc") {
     return `<div class="memory-visual crc-visual">${head}<div class="crc-board">
