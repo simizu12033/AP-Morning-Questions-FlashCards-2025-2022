@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>応用情報 午前用語ビジュアル暗記</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">AP morning term trainer</p>
+      <h1>応用情報 午前用語ビジュアル暗記</h1>
+    </div>
+    <div class="top-actions">
+      <button id="shuffleBtn" class="icon-btn" title="シャッフル">↻</button>
+      <button id="resetBtn" class="icon-btn danger" title="進捗リセット">×</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel filters" aria-label="絞り込み">
+      <label>
+        出題期
+        <select id="examFilter"></select>
+      </label>
+      <label>
+        系統
+        <select id="domainFilter"></select>
+      </label>
+      <label>
+        分類
+        <select id="categoryFilter"></select>
+      </label>
+      <label class="search">
+        検索
+        <input id="searchInput" type="search" placeholder="例: セキュリティ, SQL, 監査">
+      </label>
+      <div class="switch-row">
+        <label><input id="weakOnly" type="checkbox"> 苦手だけ</label>
+        <label><input id="hideDone" type="checkbox"> 正解済みを隠す</label>
+      </div>
+      <div class="mini-stat">
+        <span id="visibleCount">0</span>
+        <small>表示カード</small>
+      </div>
+    </aside>
+
+    <section class="study">
+      <nav class="mode-tabs" aria-label="学習モード">
+        <button class="active" data-mode="quiz">回答</button>
+        <button data-mode="learn">図解</button>
+        <button data-mode="list">一覧</button>
+      </nav>
+
+      <article id="quizView" class="card-shell">
+        <div class="card-meta">
+          <span id="cardExam"></span>
+          <span id="cardQno"></span>
+          <span id="cardCategory"></span>
+        </div>
+        <div id="diagram" class="diagram"></div>
+        <p id="questionText" class="question"></p>
+        <div class="answer-row">
+          <input id="answerInput" autocomplete="off" placeholder="用語を入力">
+          <button id="checkBtn">判定</button>
+          <button id="revealBtn" class="ghost">答え</button>
+        </div>
+        <div id="feedback" class="feedback"></div>
+        <div class="card-actions">
+          <button id="prevBtn" class="ghost">前へ</button>
+          <button id="weakBtn" class="ghost">苦手</button>
+          <button id="nextBtn">次へ</button>
+        </div>
+      </article>
+
+      <article id="learnView" class="card-shell hidden">
+        <div id="learnContent"></div>
+      </article>
+
+      <article id="listView" class="list-view hidden">
+        <div id="cardList"></div>
+      </article>
+    </section>
+
+    <aside class="panel progress" aria-label="進捗">
+      <h2>進捗</h2>
+      <div class="ring" id="scoreRing"><span>0%</span></div>
+      <dl>
+        <div><dt>正解</dt><dd id="rightCount">0</dd></div>
+        <div><dt>苦手</dt><dd id="weakCount">0</dd></div>
+        <div><dt>全カード</dt><dd id="totalCount">320</dd></div>
+      </dl>
+      <p class="source-note">4期分の午前問題から、用語暗記で選択肢を切れる論点だけを厳選。各カードの元問題リンク付き。</p>
+    </aside>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
