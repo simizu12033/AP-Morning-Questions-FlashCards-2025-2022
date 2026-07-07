@@ -517,7 +517,7 @@ function conceptPiece(cls, label, sub = "") {
 }
 
 function conceptDiagram(head, cls, pieces) {
-  return `<div class="memory-visual concept-visual ${cls}">${head}<div class="concept-scene ${cls}">${pieces.join("")}</div></div>`;
+  return `<div class="memory-visual concept-visual">${head}<div class="concept-scene ${cls}">${pieces.join("")}</div></div>`;
 }
 
 function safeClass(value) {
@@ -528,6 +528,11 @@ function stableNumber(value) {
   let hash = 0;
   for (const char of String(value)) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
   return hash;
+}
+
+function shortClue(value, max = 16) {
+  const text = String(value).replace(/\s+/g, "");
+  return text.length > max ? `${text.slice(0, max - 3)}...` : text;
 }
 
 function autoDiagram(card, head, answer, family) {
@@ -541,81 +546,84 @@ function autoDiagram(card, head, answer, family) {
     mechanism: "働きで覚える",
   }[family] || "働きで覚える";
   const roleLabel = clueLabel(card, family);
+  const categoryLabel = shortClue(card.category, 13);
+  const memoryLabel = shortClue(easyText(card.memory), 18);
+  const answerLabel = shortClue(answer, 14);
   const layouts = ["stack", "radar", "lane", "gate", "target", "map", "split", "deck", "meter", "ladder", "lab", "stamp"];
   const layout = layouts[stableNumber(`${card.id}:${card.visual}`) % layouts.length];
   const cls = `auto-concept auto-layout-${layout} auto-${safeClass(family)} auto-${safeClass(card.visual)} auto-card-${safeClass(card.id)}`;
   const pieces = {
     stack: [
-      conceptPiece("auto-topic top", card.category, "出題分野"),
-      conceptPiece("auto-memory wide-card", easyText(card.memory), "覚えどころ"),
+      conceptPiece("auto-topic top", categoryLabel, "分野"),
+      conceptPiece("auto-memory wide-card", memoryLabel, "合図"),
       conceptPiece("auto-role accent", roleLabel, familyLabel),
-      conceptPiece("auto-answer", answer, "回答後に用語名")
+      conceptPiece("auto-answer", answerLabel, "答え")
     ],
     radar: [
       conceptPiece("auto-role accent center", roleLabel, familyLabel),
-      conceptPiece("auto-topic node-a", card.category, "分野"),
-      conceptPiece("auto-memory node-b", easyText(card.memory), "合図"),
-      conceptPiece("auto-answer node-c", answer, "答え")
+      conceptPiece("auto-topic node-a", categoryLabel, "分野"),
+      conceptPiece("auto-memory node-b", memoryLabel, "合図"),
+      conceptPiece("auto-answer node-c", answerLabel, "答え")
     ],
     lane: [
-      conceptPiece("auto-topic step-a", "入口", card.category),
+      conceptPiece("auto-topic step-a", "入口", categoryLabel),
       conceptPiece("auto-role accent step-b", roleLabel, familyLabel),
-      conceptPiece("auto-memory step-c", easyText(card.memory), "選択肢を切る"),
-      conceptPiece("auto-answer step-d", answer, "答え")
+      conceptPiece("auto-memory step-c", memoryLabel, "合図"),
+      conceptPiece("auto-answer step-d", answerLabel, "答え")
     ],
     gate: [
-      conceptPiece("auto-topic", card.category, "条件"),
+      conceptPiece("auto-topic", categoryLabel, "条件"),
       conceptPiece("auto-role accent gate-core", roleLabel, "判定"),
-      conceptPiece("auto-memory", easyText(card.memory), "通す手掛かり"),
-      conceptPiece("auto-answer", answer, "名前")
+      conceptPiece("auto-memory", memoryLabel, "手掛かり"),
+      conceptPiece("auto-answer", answerLabel, "名前")
     ],
     target: [
       conceptPiece("auto-role accent target-core", roleLabel, familyLabel),
-      conceptPiece("auto-topic ring-one", card.category, "外側の文脈"),
-      conceptPiece("auto-memory ring-two", easyText(card.memory), "中心の合図"),
-      conceptPiece("auto-answer ring-three", answer, "最後に答える")
+      conceptPiece("auto-topic ring-one", categoryLabel, "文脈"),
+      conceptPiece("auto-memory ring-two", memoryLabel, "合図"),
+      conceptPiece("auto-answer ring-three", answerLabel, "答え")
     ],
     map: [
-      conceptPiece("auto-topic map-start", card.category, "ここから"),
-      conceptPiece("auto-memory map-mid", easyText(card.memory), "こう見分ける"),
+      conceptPiece("auto-topic map-start", categoryLabel, "ここから"),
+      conceptPiece("auto-memory map-mid", memoryLabel, "見分ける"),
       conceptPiece("auto-role accent map-key", roleLabel, familyLabel),
-      conceptPiece("auto-answer map-goal", answer, "到達点")
+      conceptPiece("auto-answer map-goal", answerLabel, "到達点")
     ],
     split: [
-      conceptPiece("auto-topic before", "問題文の手掛かり", card.category),
-      conceptPiece("auto-memory after accent", easyText(card.memory), "読み替える"),
+      conceptPiece("auto-topic before", "問題文", categoryLabel),
+      conceptPiece("auto-memory after accent", memoryLabel, "読み替え"),
       conceptPiece("auto-role bridge", roleLabel, familyLabel),
-      conceptPiece("auto-answer result", answer, "答え")
+      conceptPiece("auto-answer result", answerLabel, "答え")
     ],
     deck: [
-      conceptPiece("auto-topic card-one", card.category, "1枚目"),
+      conceptPiece("auto-topic card-one", categoryLabel, "分野"),
       conceptPiece("auto-role accent card-two", roleLabel, "2枚目"),
-      conceptPiece("auto-memory card-three", easyText(card.memory), "3枚目"),
-      conceptPiece("auto-answer card-four", answer, "答え")
+      conceptPiece("auto-memory card-three", memoryLabel, "合図"),
+      conceptPiece("auto-answer card-four", answerLabel, "答え")
     ],
     meter: [
-      conceptPiece("auto-topic meter-label", card.category, "観点"),
+      conceptPiece("auto-topic meter-label", categoryLabel, "観点"),
       conceptPiece("auto-role accent meter-needle", roleLabel, familyLabel),
-      conceptPiece("auto-memory meter-read", easyText(card.memory), "針が指す合図"),
-      conceptPiece("auto-answer meter-name", answer, "名前")
+      conceptPiece("auto-memory meter-read", memoryLabel, "合図"),
+      conceptPiece("auto-answer meter-name", answerLabel, "名前")
     ],
     ladder: [
-      conceptPiece("auto-topic rung-a", card.category, "下段"),
-      conceptPiece("auto-memory rung-b", easyText(card.memory), "中段"),
+      conceptPiece("auto-topic rung-a", categoryLabel, "分野"),
+      conceptPiece("auto-memory rung-b", memoryLabel, "合図"),
       conceptPiece("auto-role accent rung-c", roleLabel, familyLabel),
-      conceptPiece("auto-answer rung-d", answer, "上段")
+      conceptPiece("auto-answer rung-d", answerLabel, "答え")
     ],
     lab: [
-      conceptPiece("auto-topic lab-sample", card.category, "材料"),
-      conceptPiece("auto-memory lab-flask", easyText(card.memory), "反応"),
+      conceptPiece("auto-topic lab-sample", categoryLabel, "材料"),
+      conceptPiece("auto-memory lab-flask", memoryLabel, "反応"),
       conceptPiece("auto-role accent lab-result", roleLabel, familyLabel),
-      conceptPiece("auto-answer lab-label", answer, "ラベル")
+      conceptPiece("auto-answer lab-label", answerLabel, "ラベル")
     ],
     stamp: [
-      conceptPiece("auto-topic paper-card", card.category, "問題文"),
+      conceptPiece("auto-topic paper-card", categoryLabel, "問題文"),
       conceptPiece("auto-role accent stamp-card", roleLabel, "印を押す"),
-      conceptPiece("auto-memory memo-card", easyText(card.memory), "理由"),
-      conceptPiece("auto-answer name-card", answer, "用語名")
+      conceptPiece("auto-memory memo-card", memoryLabel, "理由"),
+      conceptPiece("auto-answer name-card", answerLabel, "用語名")
     ],
   }[layout];
   return conceptDiagram(head, cls, pieces);

@@ -206,15 +206,21 @@ select, input {
 
 .memory-visual {
   width: min(100%, 760px);
+  box-sizing: border-box;
   min-height: 360px;
   display: grid;
   grid-template-columns: 1fr;
   gap: 14px;
   align-items: stretch;
+  justify-items: stretch;
+  justify-content: stretch;
   padding: 18px;
 }
 
 .visual-head {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   display: grid;
   align-content: start;
   gap: 8px;
@@ -249,7 +255,10 @@ select, input {
 }
 
 .memory-visual > :nth-child(2) {
+  width: 100%;
   min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .crc-board,
@@ -718,6 +727,11 @@ select, input {
 }
 
 .concept-scene {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  justify-self: stretch;
+  box-sizing: border-box;
   position: relative;
   min-height: 240px;
   display: grid;
@@ -748,14 +762,18 @@ select, input {
   color: #12202d;
   text-align: center;
   font-weight: 900;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: keep-all;
+  line-break: strict;
   line-height: 1.25;
 }
 
 .concept-piece b,
 .concept-piece small {
   max-width: 100%;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: keep-all;
+  line-break: strict;
 }
 
 .concept-piece small {
@@ -868,13 +886,14 @@ select, input {
 }
 
 .auto-role {
-  min-height: 116px;
-  border-radius: 50%;
+  min-height: 92px;
+  border-radius: 18px;
 }
 
 .auto-memory {
   background: #fffefa;
   border-style: dashed;
+  font-size: 14px;
 }
 
 .auto-answer {
@@ -1021,6 +1040,33 @@ select, input {
 
 .auto-layout-stamp .memo-card {
   border-style: dashed;
+}
+
+.learn-grid .concept-scene[class*="auto-layout-"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(78px, auto);
+}
+
+.learn-grid .concept-scene[class*="auto-layout-"] > .concept-piece {
+  grid-column: auto;
+  grid-row: auto;
+  min-height: 78px;
+  transform: none;
+}
+
+.learn-grid .auto-layout-target .target-core,
+.learn-grid .gate-core,
+.learn-grid .auto-layout-meter .meter-needle,
+.learn-grid .auto-layout-lab .lab-result,
+.learn-grid .auto-layout-stamp .stamp-card {
+  border-radius: 18px;
+  clip-path: none;
+}
+
+.learn-grid .auto-layout-lane .concept-piece::after,
+.learn-grid .auto-layout-map .map-start::after,
+.learn-grid .auto-layout-map .map-key::after {
+  display: none;
 }
 
 .auto-security .auto-role,
