@@ -6,7 +6,7 @@ const curatedSpecs = [
   ["07_aki-12", "IaC", "サーバ、ネットワーク、OS設定などのインフラ構成をコードとして記述し、同じ環境を再現・変更管理できるようにする考え方。", "iac", "設定を手順書ではなくコードで再現する", ["Infrastructure as Code"]],
   ["07_aki-17", "スレッドセーフ", "複数スレッドが同時に呼び出しても、共有データの不整合や破壊が起きないように作られている性質。", "thread", "同時実行でも共有状態が壊れない", []],
   ["07_aki-26", "NoSQL", "リレーショナル表に限定せず、キー値、ドキュメント、列指向、グラフなどで柔軟にデータを扱うDB群。", "nosql", "表だけではないDB。柔軟性と分散が合図", []],
-  ["07_aki-28", "ビュー", "実表から必要な列や行を切り出して見せる仮想表。利用者には表に見えるが、実データを直接持たないことが多い。", "view", "実表そのものではなく仮想的な見せ方", []],
+  ["07_aki-28", "ビュー", "実表から必要な列や行を切り出して見せる仮想表。利用者には表に見えるが、実データを直接持たないことが多い。", "view", "実表そのものではなく仮想的な見せ方", ["view"]],
   ["07_aki-29", "多版同時実行制御", "更新前後の複数バージョンを保持し、読取りと書込みを衝突させにくくする同時実行制御。", "mvcc", "読む人は古い版、書く人は新しい版", ["MVCC"]],
   ["07_aki-31", "リバースプロキシ", "サーバ側の入口に置かれ、利用者からの要求をバックエンドへ中継する。負荷分散、TLS終端、キャッシュなどに使う。", "reverseProxy", "クライアントの代理ではなくサーバ群の前に立つ代理", []],
   ["07_aki-34", "スパニングツリープロトコル", "スイッチ間の冗長リンクでループが起きないよう、一部ポートを論理的に止めて木構造を作るプロトコル。", "stp", "冗長リンクは残しつつループだけ止める", ["STP"]],
@@ -33,7 +33,7 @@ const curatedSpecs = [
   ["07_haru-17", "OpenAPI Specification", "REST APIの仕様を機械可読に記述し、APIドキュメント生成やクライアント生成に利用できる形式。", "openapi", "API仕様書を機械可読にする", ["OAS", "Open API Specification"]],
   ["07_haru-29", "PoE", "LANケーブルでデータ通信と電力供給を同時に行う仕組み。監視カメラや無線APで使われる。", "poe", "LANケーブル一本で通信と給電", ["Power over Ethernet"]],
   ["07_haru-34", "Base64", "バイナリデータを64種類の文字で表し、メールやHTTPなどテキスト前提の経路で扱いやすくする符号化。", "base64", "バイナリを文字列として運ぶ", ["base64エンコーディング"]],
-  ["07_haru-37", "サイドチャネル攻撃", "処理時間、消費電力、電磁波など、本来の入出力ではない副次情報から秘密情報を推測する攻撃。", "sideChannel", "横から漏れる副次情報を読む", []],
+  ["07_haru-37", "サイドチャネル攻撃", "処理時間、消費電力、電磁波など、本来の入出力ではない副次情報から秘密情報を推測する攻撃。", "sideChannel", "処理時間や電力など横から漏れる情報を読む", []],
   ["07_haru-38", "OCSP", "証明書が失効していないかを、認証局側へオンラインで問い合わせるプロトコル。", "ocsp", "証明書の失効状態をオンライン確認", ["Online Certificate Status Protocol"]],
   ["07_haru-40", "SBOM", "ソフトウェアを構成するライブラリ、部品、バージョンなどを一覧化した部品表。脆弱性影響調査に使う。", "sbom", "ソフトウェアの部品表", ["Software Bill of Materials"]],
   ["07_haru-41", "CookieのSecure属性", "CookieをHTTPS通信時だけ送信するよう指定する属性。平文HTTPでの漏えいを防ぎやすくする。", "secureCookie", "HTTPSのときだけCookieを送る", ["Secure属性"]],
@@ -208,16 +208,70 @@ const curatedSpecs = [
 ];
 
 const rawById = new Map(rawCards.map((card) => [card.id, card]));
+const aliasByVisual = {
+  view: ["view"],
+  nosql: ["Not Only SQL", "non SQL"],
+  psirt: ["Product Security Incident Response Team"],
+  cspm: ["Cloud Security Posture Management"],
+  openapi: ["OpenAPI", "Open API", "OpenAPI Specification", "Open API Specification", "OAS"],
+  sbom: ["Software Bill of Materials"],
+  secureCookie: ["Secure", "Secure属性"],
+  dns: ["Domain Name System"],
+  dnsPoison: ["DNS cache poisoning"],
+  dnssec: ["Domain Name System Security Extensions"],
+  saml: ["Security Assertion Markup Language"],
+  waf: ["Web Application Firewall"],
+  spf: ["Sender Policy Framework"],
+  dkim: ["DomainKeys Identified Mail"],
+  ocsp: ["Online Certificate Status Protocol"],
+  crl: ["Certificate Revocation List"],
+  lru: ["Least Recently Used"],
+  poe: ["Power over Ethernet"],
+  json: ["JavaScript Object Notation"],
+  iac: ["Infrastructure as Code"],
+  sdn: ["Software Defined Networking", "Software-Defined Networking"],
+  soa: ["Service Oriented Architecture", "Service-Oriented Architecture"],
+  mes: ["Manufacturing Execution System"],
+  plm: ["Product Lifecycle Management"],
+  lpwa: ["Low Power Wide Area"],
+  ppm: ["Product Portfolio Management"],
+  wbs: ["Work Breakdown Structure"],
+  scm: ["Supply Chain Management"],
+  bpo: ["Business Process Outsourcing"],
+  san: ["Storage Area Network"],
+};
+
+function initials(value) {
+  const words = String(value).match(/[A-Za-z][A-Za-z0-9]*/g) || [];
+  return words.length >= 2 ? words.map((word) => word[0]).join("") : "";
+}
+
+function uniqueAliases(values) {
+  const seen = new Set();
+  return values.filter((value) => {
+    const key = normalize(value);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 const cards = curatedSpecs.map(([id, answer, text, visual, memory, aliases]) => {
   const raw = rawById.get(id);
   if (!raw) throw new Error(`Missing source card: ${id}`);
+  const visualAliases = aliasByVisual[visual] || [];
+  const allAliases = [answer, ...(aliases || []), ...visualAliases];
+  for (const alias of [...allAliases]) {
+    const short = initials(alias);
+    if (short) allAliases.push(short);
+  }
   return {
     ...raw,
     answer,
     text,
     visual,
     memory,
-    aliases: [answer, ...(aliases || [])],
+    aliases: uniqueAliases(allAliases),
   };
 });
 
@@ -265,15 +319,15 @@ function esc(value) {
 }
 
 const easyReplacements = [
-  ["インフラ構成", "サーバやネットワークの設定"],
+  ["インフラ構成", "インフラの構成"],
   ["実行環境", "動かすための環境"],
   ["再現", "再作成"],
-  ["変更管理", "変更を記録して管理すること"],
+  ["変更管理", "変更管理"],
   ["複数スレッド", "複数の処理"],
   ["不整合", "食い違い"],
   ["共有データ", "みんなで使うデータ"],
   ["リレーショナル表", "行と列の表"],
-  ["仮想表", "実体はないが表のように見えるもの"],
+  ["仮想表", "仮想の表"],
   ["参照整合性", "関連するデータのつじつま"],
   ["同時実行制御", "同時に使っても矛盾しない仕組み"],
   ["バックエンド", "裏側のサーバ"],
@@ -283,6 +337,7 @@ const easyReplacements = [
   ["木構造", "枝分かれした形"],
   ["認証局", "証明書を発行する機関"],
   ["失効", "無効になること"],
+  ["脆弱性影響調査", "弱点の影響調査"],
   ["脆弱性", "弱点"],
   ["ポリシー違反", "ルール違反"],
   ["暗号化して", "読めない形にして"],
@@ -326,10 +381,10 @@ const easyReplacements = [
   ["機械可読", "コンピュータが読みやすい形"],
   ["クライアント生成", "利用側のプログラムを自動で作ること"],
   ["バイナリデータ", "画像やファイルなど文字だけではないデータ"],
-  ["副次情報", "本筋ではない横から漏れる情報"],
+  ["副次情報", "手掛かり"],
   ["秘密情報", "外に出してはいけない情報"],
   ["オンラインで問い合わせる", "ネット経由で確認する"],
-  ["部品表", "使っている部品の一覧"],
+  ["部品表", "部品表"],
   ["総当たり攻撃", "候補を片っ端から試す攻撃"],
   ["反復", "短い周期で繰り返すこと"],
   ["主要な要求事項", "大事な要求"],
@@ -414,6 +469,390 @@ function easyText(value) {
   return result;
 }
 
+const glossaryEntries = [
+  { id: "rest-api", terms: ["REST API"], title: "REST API", full: "Representational State Transfer API", body: "Webでよく使うAPIの作り方。URLで対象を示し、GETやPOSTなどのHTTPの操作でデータを扱います。" },
+  { id: "api", terms: ["API"], title: "API", full: "Application Programming Interface", body: "プログラム同士が機能やデータをやり取りするための窓口です。" },
+  { id: "openapi", terms: ["OpenAPI Specification", "Open API Specification", "OpenAPI", "OAS"], title: "OpenAPI Specification", full: "OpenAPI Specification", body: "REST APIの仕様を、機械が読める形で書くための形式です。APIドキュメントやクライアント生成に使えます。" },
+  { id: "http", terms: ["HTTPS", "HTTP"], title: "HTTP / HTTPS", full: "Hypertext Transfer Protocol", body: "Webブラウザとサーバが通信するときの約束です。HTTPSは暗号化されたHTTPです。" },
+  { id: "db", terms: ["DBMS", "DB"], title: "DB / DBMS", full: "Database / Database Management System", body: "DBはデータベース、DBMSはデータベースを保存・検索・更新するための管理ソフトです。" },
+  { id: "sql", terms: ["NoSQL", "SQL"], title: "SQL / NoSQL", full: "Structured Query Language", body: "SQLは表形式データベースを操作する言語です。NoSQLは表形式に限らないデータベースの総称です。" },
+  { id: "json", terms: ["JSON"], title: "JSON", full: "JavaScript Object Notation", body: "キーと値の組でデータを書く軽い形式です。Web APIのデータ交換でよく使います。" },
+  { id: "xml", terms: ["XML"], title: "XML", full: "Extensible Markup Language", body: "タグで意味を付けてデータを書く形式です。設定やデータ交換で使われます。" },
+  { id: "sso", terms: ["SSO", "シングルサインオン"], title: "SSO", full: "Single Sign-On", body: "一度ログインすれば、複数のサービスを続けて使える仕組みです。" },
+  { id: "saml", terms: ["SAML認証", "SAML", "アサーション"], title: "SAML", full: "Security Assertion Markup Language", body: "本人確認できたという情報をXML形式で渡し、SSOを実現する仕組みです。アサーションは認証結果を示す情報です。" },
+  { id: "dns", terms: ["DNSSEC", "DNS"], title: "DNS / DNSSEC", full: "Domain Name System", body: "DNSはドメイン名をIPアドレスへ変換する仕組みです。DNSSECはDNS応答に署名を付けて改ざんを見つけやすくします。" },
+  { id: "ip", terms: ["IPアドレス", "IP"], title: "IPアドレス", full: "Internet Protocol address", body: "ネットワーク上の機器を識別する住所のような番号です。" },
+  { id: "waf", terms: ["WAF"], title: "WAF", full: "Web Application Firewall", body: "WebアプリへのHTTP通信を検査し、SQLインジェクションなどを防ぐ仕組みです。" },
+  { id: "sbom", terms: ["SBOM"], title: "SBOM", full: "Software Bill of Materials", body: "ソフトウェアに含まれる部品やライブラリの一覧表です。脆弱性の影響調査に使います。" },
+  { id: "psirt", terms: ["PSIRT"], title: "PSIRT", full: "Product Security Incident Response Team", body: "自社製品やサービスの脆弱性対応を行うチームです。" },
+  { id: "cspm", terms: ["CSPM"], title: "CSPM", full: "Cloud Security Posture Management", body: "クラウド設定を点検し、公開設定ミスや権限過多を見つける管理手法です。" },
+  { id: "iac", terms: ["IaC", "Infrastructure as Code"], title: "IaC", full: "Infrastructure as Code", body: "サーバやネットワークなどの設定を手順書ではなくコードで管理し、同じ環境を再現しやすくします。" },
+  { id: "poe", terms: ["PoE"], title: "PoE", full: "Power over Ethernet", body: "LANケーブル1本で通信と電力供給を同時に行う仕組みです。" },
+  { id: "lru", terms: ["LRU"], title: "LRU", full: "Least Recently Used", body: "最も長い間使われていないものを追い出す置換え方式です。" },
+  { id: "mvcc", terms: ["MVCC"], title: "MVCC", full: "Multi-Version Concurrency Control", body: "複数版を持つことで、読込みと書込みを衝突させにくくする同時実行制御です。" },
+  { id: "wbs", terms: ["WBS"], title: "WBS", full: "Work Breakdown Structure", body: "プロジェクト作業を階層的に細かく分けた構成図です。" },
+  { id: "uml", terms: ["UML"], title: "UML", full: "Unified Modeling Language", body: "ソフトウェアや業務の構造・動きを図で表すための共通記法です。" },
+  { id: "ux", terms: ["UX"], title: "UX", full: "User Experience", body: "利用者が製品やサービスを使う前後を含めて得る体験全体です。" },
+];
+
+const glossaryById = Object.fromEntries(glossaryEntries.map((entry) => [entry.id, entry]));
+const glossaryTerms = glossaryEntries
+  .flatMap((entry) => entry.terms.map((term) => ({ term, lower: term.toLowerCase(), id: entry.id })))
+  .sort((a, b) => b.term.length - a.term.length);
+
+function renderRichText(value) {
+  const text = easyText(value);
+  let html = "";
+  for (let i = 0; i < text.length;) {
+    const hit = glossaryTerms.find((item) => text.slice(i, i + item.term.length).toLowerCase() === item.lower);
+    if (hit) {
+      const shown = text.slice(i, i + hit.term.length);
+      html += `<button type="button" class="term-link" data-term="${esc(hit.id)}">${esc(shown)}</button>`;
+      i += hit.term.length;
+    } else {
+      html += esc(text[i]);
+      i += 1;
+    }
+  }
+  return html;
+}
+
+function glossaryNoteHtml(entry) {
+  const full = entry.full ? `<p class="term-full">${esc(entry.full)}</p>` : "";
+  return `<span class="term-note" role="note"><strong>${esc(entry.title)}</strong>${full}<span>${esc(entry.body)}</span><button type="button" class="term-close">戻る</button></span>`;
+}
+
+function hideAnswerText(card, value) {
+  let result = easyText(value);
+  for (const alias of card.aliases) {
+    if (normalize(alias).length >= 3) {
+      result = result.split(alias).join("□□□");
+    }
+  }
+  return result.split(card.answer).join("□□□");
+}
+
+function primaryExpansion(card) {
+  return card.aliases.find((alias) => /[A-Za-z]/.test(alias) && /\s/.test(alias) && normalize(alias) !== normalize(card.answer)) || "";
+}
+
+const curatedLessons = {
+  "07_aki-12": {
+    cueTitle: "環境を文章でなく材料表にする",
+    cue: "サーバやネットワークの設定を、手で読む手順ではなく、実行できる記述として残す。",
+    origin: "Infrastructure as Code = インフラをコードとして扱う。",
+    analogy: "料理のメモではなく、同じ料理を自動で作るレシピファイル。人の手順理解に頼らないのが合図。",
+    choices: "「構成を記述」「同じ環境を再現」「変更管理」が並んだらこれ。単なる運用手順書や設計書ではない。",
+    scene: ["設定をファイル化", "実行して環境作成", "同じ状態を何度も再現"]
+  },
+  "07_aki-26": {
+    cueTitle: "表だけに閉じないDB",
+    cue: "行と列の表に限定せず、キー値、文書、グラフなどで柔軟に保存する。",
+    origin: "Not Only SQL = SQLだけではない、という意味。",
+    analogy: "きっちりした帳簿だけでなく、カード箱、書類束、関係図も置ける倉庫。",
+    choices: "「リレーショナルに限定しない」「柔軟」「分散」「キー値・ドキュメント」が合図。",
+    scene: ["表以外も扱う", "データ形式を選べる", "大規模分散に向く"]
+  },
+  "07_aki-28": {
+    cueTitle: "実体ではなく見せ方",
+    cue: "実データを直接持つ表ではなく、必要な行や列だけを表のように見せる。",
+    origin: "view = 見え方。DBでは実表を切り出した仮想の表。",
+    analogy: "原本の台帳を渡さず、必要欄だけを写した閲覧用シートを見せる。",
+    choices: "「仮想表」「実表から切り出す」「利用者には表に見える」があればこれ。実表そのものではない。",
+    scene: ["実表から必要部分", "利用者に表として表示", "元データは直接持たない"]
+  },
+  "07_aki-29": {
+    cueTitle: "読む人と書く人を別の版で逃がす",
+    cue: "更新中でも、読取り側には古い版を見せ、書込み側は新しい版を作る。",
+    origin: "Multi-Version Concurrency Control = 複数の版で同時実行を制御する。",
+    analogy: "資料を編集中でも、読者には直前の版を配っておく。編集作業と閲覧をぶつけない。",
+    choices: "「複数バージョン」「読取りと書込みの衝突を減らす」が合図。単なる排他ロックとは違う。",
+    scene: ["古い版を読む", "新しい版へ書く", "衝突を減らす"]
+  },
+  "07_aki-31": {
+    cueTitle: "サーバ群の前に立つ代理",
+    cue: "利用者から見える入口になり、奥のWebサーバへ要求を振り分ける。",
+    origin: "reverse proxy = 逆向きの代理。利用者側ではなくサーバ側を代表する。",
+    analogy: "店の受付。客は受付に話し、受付が奥の担当者へ回す。",
+    choices: "「サーバ側の入口」「負荷分散」「TLS終端」「キャッシュ」が合図。クライアント側の代理と混同しない。",
+    scene: ["利用者の入口", "要求を中継", "奥のサーバを隠す"]
+  },
+  "07_aki-34": {
+    cueTitle: "輪を切って木にする",
+    cue: "予備の通信経路は残しつつ、ループになる道だけを論理的に止める。",
+    origin: "Spanning Tree Protocol = ネットワークを木の形に張るための約束。",
+    analogy: "街に環状道路があると迷子の荷物が回り続けるので、一部ゲートを閉じて一本道にする。",
+    choices: "「冗長リンク」「ループ防止」「一部ポートをブロック」が合図。",
+    scene: ["予備経路あり", "ループ箇所を止める", "木構造で通信"]
+  },
+  "07_aki-36": {
+    cueTitle: "攻撃を段階で切る",
+    cue: "偵察から目的達成まで、攻撃者の行動を手順に分けて防御点を探す。",
+    origin: "kill chain = 攻撃の連鎖。途中で切れば目的達成を止められる。",
+    analogy: "侵入の映画を、下見、侵入、運び出しの場面に分けて対策する。",
+    choices: "「偵察」「武器化」「侵入」「目的達成」など段階語が出たらこれ。",
+    scene: ["偵察", "侵入", "目的達成前に止める"]
+  },
+  "07_aki-39": {
+    cueTitle: "失効証明書の一覧表",
+    cue: "もう信用してはいけない証明書をリストで配り、照合して確認する。",
+    origin: "Certificate Revocation List = 証明書の失効リスト。",
+    analogy: "入館証の無効者リスト。証明書そのものではなく、失効していないかを見る名簿。",
+    choices: "「失効した証明書の一覧」「リストと照合」が合図。オンライン問い合わせならOCSP。",
+    scene: ["証明書を受け取る", "失効リストを見る", "載っていたら信用しない"]
+  },
+  "07_aki-40": {
+    cueTitle: "製品の脆弱性窓口",
+    cue: "自社製品の弱点報告を受け、修正し、公開時期を調整する組織。",
+    origin: "Product Security Incident Response Team = 製品セキュリティ事故対応チーム。",
+    analogy: "自社製品のリコール窓口。社内PCの運用監視ではなく、製品利用者へ向いた対応。",
+    choices: "「自社製品」「脆弱性受付」「修正」「公開調整」が合図。",
+    scene: ["報告を受ける", "影響を分析", "修正と公開を調整"]
+  },
+  "07_aki-42": {
+    cueTitle: "クラウド設定の姿勢検査",
+    cue: "公開し過ぎ、権限を与え過ぎ、ルール違反などを継続的に見つける。",
+    origin: "Cloud Security Posture Management = クラウドの安全姿勢管理。",
+    analogy: "クラウドの健康診断。病気を治すより先に、危ない姿勢を見つける。",
+    choices: "「クラウド設定」「設定ミス」「権限過多」「継続的点検」が合図。",
+    scene: ["設定を集める", "基準と比べる", "公開ミスを警告"]
+  },
+  "07_aki-44": {
+    cueTitle: "証拠を壊さず調べる",
+    cue: "端末やログを保全してから解析し、インシデントの事実を明らかにする。",
+    origin: "forensics = 法廷の、鑑識の、という意味。",
+    analogy: "事件現場を片付ける前に、写真を撮り、証拠袋に入れ、あとで分析する。",
+    choices: "「証拠性」「保全」「ログ解析」「事実解明」が合図。単なる復旧作業ではない。",
+    scene: ["証拠を保全", "ログを解析", "事実を説明"]
+  },
+  "07_aki-49": {
+    cueTitle: "Webなのにアプリらしい",
+    cue: "Webアプリにオフライン利用、ホーム画面追加、通知などを持たせる。",
+    origin: "Progressive Web App = 段階的に強化されたWebアプリ。",
+    analogy: "ブラウザで動くが、スマホアプリのようにホーム画面から使える。",
+    choices: "「オフライン」「プッシュ通知」「ホーム画面追加」が合図。",
+    scene: ["Webで配る", "端末に追加", "アプリ風に使う"]
+  },
+  "07_aki-52": {
+    cueTitle: "チームは段階的に成熟する",
+    cue: "形成、混乱、統一、機能という流れでチームの状態を捉える。",
+    origin: "Tuckmanは提唱者名。語源より4段階を覚えるカード。",
+    analogy: "初対面、ぶつかる、まとまる、自然に動く、の順にチームが育つ。",
+    choices: "「形成期」「混乱期」「統一期」「機能期」が出たらこれ。",
+    scene: ["形成", "混乱", "統一", "機能"]
+  },
+  "07_aki-54": {
+    cueTitle: "分岐と期待値で選ぶ",
+    cue: "選択肢、確率、結果を木にして、どれを選ぶか比較する。",
+    origin: "decision tree = 意思決定の木。",
+    analogy: "道が枝分かれする地図に、成功確率と得失をメモして進路を選ぶ。",
+    choices: "「選択肢」「発生確率」「期待値」「木」が合図。",
+    scene: ["選択肢を枝にする", "確率を書く", "期待値で比較"]
+  },
+  "07_aki-62": {
+    cueTitle: "業務機能をサービス部品にする",
+    cue: "業務機能を疎結合なサービスとして組み合わせ、再利用しやすくする。",
+    origin: "Service-Oriented Architecture = サービス指向アーキテクチャ。",
+    analogy: "会計、在庫、顧客管理を部品として呼び出せるようにする。",
+    choices: "「サービスとして」「疎結合」「再利用」が合図。単に小さいサービスへ分割ならマイクロサービス寄り。",
+    scene: ["業務機能を部品化", "疎結合で呼ぶ", "再利用する"]
+  },
+  "07_aki-63": {
+    cueTitle: "一緒に起きる組合せを探す",
+    cue: "大量データから、Aを買う人はBも買う、といった規則を見つける。",
+    origin: "association = 関連、結び付き。",
+    analogy: "買物かごの中を見て、パンと牛乳が一緒に入る傾向を探す。",
+    choices: "「同時購入」「組合せ」「支持度・信頼度」が合図。",
+    scene: ["取引を集める", "同時発生を見る", "規則を出す"]
+  },
+  "07_aki-70": {
+    cueTitle: "製品と市場の2軸",
+    cue: "既存/新規の製品と市場を組み合わせ、成長戦略を4分類する。",
+    origin: "Ansoffは提唱者名。製品×市場の表で覚える。",
+    analogy: "今の商品を今の客に売るか、新商品か、新市場か、両方新しいかを分ける。",
+    choices: "「市場浸透」「製品開発」「市場開拓」「多角化」が合図。",
+    scene: ["製品: 既存/新規", "市場: 既存/新規", "4つの戦略に分類"]
+  },
+  "07_aki-71": {
+    cueTitle: "工場現場の実行管理",
+    cue: "作業指示、実績、品質、設備状態を管理し、計画と現場をつなぐ。",
+    origin: "Manufacturing Execution System = 製造実行システム。",
+    analogy: "工場の現場監督。計画表を、実際の作業・実績に落とす。",
+    choices: "「製造現場」「作業指示」「実績収集」「品質・設備」が合図。",
+    scene: ["計画を受ける", "現場へ指示", "実績を返す"]
+  },
+  "07_aki-72": {
+    cueTitle: "製品の一生をつなぐ",
+    cue: "企画、設計、製造、保守、廃棄まで製品情報を一貫管理する。",
+    origin: "Product Lifecycle Management = 製品ライフサイクル管理。",
+    analogy: "製品の母子手帳。生まれる前から終わりまで情報を残す。",
+    choices: "「製品ライフサイクル」「企画から廃棄まで」「製品情報」が合図。",
+    scene: ["企画", "設計・製造", "保守・廃棄まで管理"]
+  },
+  "07_aki-73": {
+    cueTitle: "小さいデータを遠くへ長く",
+    cue: "低消費電力で長距離通信し、IoTセンサーの少量データ送信に向く。",
+    origin: "Low Power Wide Area = 低電力で広い範囲。",
+    analogy: "大容量動画ではなく、畑の温度をときどき遠くへ知らせる通信。",
+    choices: "「省電力」「長距離」「少量データ」「IoTセンサー」が合図。",
+    scene: ["小さなセンサー", "少量だけ送る", "電池で長く動く"]
+  },
+  "07_haru-17": {
+    cueTitle: "API仕様を機械にも読ませる",
+    cue: "REST APIの仕様を決まった形式で書き、文書やクライアントを生成できる。",
+    origin: "OpenAPI Specification = API仕様を開いた形式で記述する規格。",
+    analogy: "APIの設計図を、人間用の説明書ではなく、道具も読める形式で渡す。",
+    choices: "「REST API」「機械可読」「ドキュメント生成」「クライアント生成」が合図。",
+    scene: ["仕様を記述", "機械が読む", "文書やコードを生成"]
+  },
+  "07_haru-29": {
+    cueTitle: "LANケーブル一本で通信と電力",
+    cue: "データ通信に使うLANケーブルから、機器への給電も行う。",
+    origin: "Power over Ethernet = Ethernet越しに電力を送る。",
+    analogy: "監視カメラに電源コンセントを別に用意せず、LAN線だけで動かす。",
+    choices: "「LANケーブル」「通信と給電」「監視カメラ」「無線AP」が合図。",
+    scene: ["LANを接続", "データを送る", "同時に電力も送る"]
+  },
+  "07_haru-37": {
+    cueTitle: "正面ではなく横の手掛かり",
+    cue: "秘密そのものではなく、処理時間、電力、電磁波などを観測して推測する。",
+    origin: "side channel = 本筋ではない横の経路。",
+    analogy: "部屋の中は見えなくても、音や明かりの変化で中の動きを読む。",
+    choices: "「処理時間」「消費電力」「電磁波」「本来の入出力ではない」が合図。",
+    scene: ["正面の値は見ない", "時間や電力を測る", "秘密を推測"]
+  },
+  "07_haru-40": {
+    cueTitle: "ソフトの部品表",
+    cue: "ライブラリ、部品、バージョンを一覧にして、脆弱性の影響範囲を調べる。",
+    origin: "Software Bill of Materials = ソフトウェアの材料表。",
+    analogy: "食品の原材料表示。どの部品が入っているか分かれば、回収対象を探せる。",
+    choices: "「部品表」「依存ライブラリ」「バージョン」「脆弱性影響調査」が合図。",
+    scene: ["部品を書き出す", "版を確認", "脆弱性の影響を見る"]
+  },
+  "07_haru-41": {
+    cueTitle: "HTTPSの時だけ送る印",
+    cue: "Cookieを平文HTTPでは送らず、HTTPS通信時だけ送るようにする。",
+    origin: "Secure属性 = 安全な通信時にだけCookieを送る指定。",
+    analogy: "重要な封筒は鍵付き配送のときだけ渡す。",
+    choices: "「Cookie」「HTTPS時だけ」「平文HTTPで送らない」が合図。暗号化そのものではなく送信条件。",
+    scene: ["Cookieに印を付ける", "HTTPSなら送る", "HTTPなら送らない"]
+  },
+  "07_haru-42": {
+    cueTitle: "入力欄からOS命令を混ぜる",
+    cue: "利用者入力にOSコマンドを紛れ込ませ、サーバで意図しない命令を実行させる。",
+    origin: "injection = 注入。コマンドを入力値へ混ぜ込む。",
+    analogy: "注文欄に料理名ではなく厨房への命令を書き足す攻撃。",
+    choices: "「OSコマンド」「入力値に混ぜる」「サーバで実行」が合図。SQLならSQLインジェクション。",
+    scene: ["入力欄に混ぜる", "サーバが解釈", "OS命令が実行される"]
+  },
+  "07_haru-44": {
+    cueTitle: "ハッシュ計算を何度も回す",
+    cue: "パスワードのハッシュ計算を繰り返し、総当たりにかかる時間を増やす。",
+    origin: "stretching = 引き伸ばす。攻撃に必要な時間を引き伸ばす。",
+    analogy: "鍵を1回試すたびに長い待ち時間を入れ、全探索を遅くする。",
+    choices: "「ハッシュを多数回」「総当たり攻撃を遅くする」が合図。ソルトは別の混ぜ物対策。",
+    scene: ["パスワード", "ハッシュを反復", "攻撃時間を増やす"]
+  },
+  "07_haru-48": {
+    cueTitle: "短い反復と実践重視",
+    cue: "ペアプログラミング、テスト駆動開発、継続的インテグレーションを重視する。",
+    origin: "Extreme Programming = 実践を極端なほど徹底する開発手法。",
+    analogy: "小さく作り、すぐ試し、二人で見ながら品質を上げる。",
+    choices: "「ペアプログラミング」「TDD」「CI」がまとまって出たらこれ。",
+    scene: ["短い反復", "テストを先に", "ペアで改善"]
+  },
+  "07_haru-67": {
+    cueTitle: "市場成長率とシェアの表",
+    cue: "事業を市場成長率と相対的市場シェアで分類し、投資配分を考える。",
+    origin: "Product Portfolio Management = 製品・事業の組合せ管理。",
+    analogy: "稼ぎ頭、問題児、花形、負け犬を地図に置き、資金をどこへ回すか考える。",
+    choices: "「市場成長率」「相対的市場シェア」「投資配分」が合図。",
+    scene: ["成長率を見る", "市場シェアを見る", "投資先を決める"]
+  },
+  "07_haru-69": {
+    cueTitle: "事業の要素を一枚に並べる",
+    cue: "顧客、価値提案、チャネル、収益、コストなどを一枚で整理する。",
+    origin: "business model canvas = 事業モデルを描く一枚のキャンバス。",
+    analogy: "事業計画を長文でなく、9つの欄がある設計ボードに置く。",
+    choices: "「顧客」「価値提案」「チャネル」「収益」「コスト」が一枚ならこれ。",
+    scene: ["顧客を置く", "価値を置く", "収益とコストを見る"]
+  }
+};
+
+function termStory(card) {
+  const lesson = curatedLessons[card.id];
+  if (lesson) return [lesson.origin, `${lesson.analogy} ${lesson.choices}`];
+  const expansion = primaryExpansion(card);
+  const known = {
+    iac: ["Infrastructure as Code = インフラをコードとして扱う", "手順書を読む人ではなく、コードを実行して同じ環境を作る、と覚える。"],
+    view: ["view = 見え方", "実表そのものではなく、利用者に見せる仮想の表というイメージで覚える。"],
+    nosql: ["NoSQL = SQLだけに限らない", "表形式に縛られず、キー値・文書・グラフなども扱うDB群と覚える。"],
+    mvcc: ["Multi-Version Concurrency Control = 複数版で同時実行を制御", "読む人には古い版、書く人には新しい版を見せて衝突を避ける。"],
+    openapi: ["OpenAPI Specification = API仕様を開いた形式で書く", "REST APIの設計書を機械が読める形にして、文書やクライアント生成に使う。"],
+    sideChannel: ["side channel = 横道の経路", "正面の入出力ではなく、時間・電力・電磁波という横から漏れる手掛かりを読む攻撃。"],
+    sbom: ["Software Bill of Materials = ソフトウェアの部品表", "食品の原材料表示のように、ソフトに入っている部品を一覧にする。"],
+    waf: ["Web Application Firewall = Webアプリ用の防火壁", "ネットワーク全体ではなく、HTTPの中身を見てWebアプリ攻撃を止める。"],
+    psirt: ["Product Security Incident Response Team = 製品セキュリティ対応チーム", "社内システムではなく、自社製品の脆弱性受付・修正・公開調整をするチーム。"],
+    cspm: ["Cloud Security Posture Management = クラウドの安全姿勢管理", "クラウド設定の姿勢を点検し、公開ミスや権限過多を見つける。"],
+    saml: ["Security Assertion Markup Language = 認証結果を渡すための言語", "本人確認できた、という証明書のような情報を渡してSSOにつなげる。"],
+    dnssec: ["DNS Security Extensions = DNSに署名を足す拡張", "名前解決の答えが本物か、署名で確かめる。"],
+    poe: ["Power over Ethernet = LANケーブルで電力も送る", "1本のLANケーブルで通信と給電をまとめる。"],
+    wbs: ["Work Breakdown Structure = 作業を分解した構成", "大きな仕事を小さな作業パッケージへ割っていく木構造。"],
+    lru: ["Least Recently Used = 最も最近使われていない", "長い間使っていないページから追い出す、と覚える。"],
+  }[card.visual];
+  if (known) return known;
+  if (expansion) return [`${card.answer} = ${expansion}`, `${easyText(card.memory)}。略語は正式名称の頭文字と意味を結び付けて覚える。`];
+  return [`言葉の中心: ${card.answer}`, `${easyText(card.memory)}。問題文ではこの一文に近い表現を探す。`];
+}
+
+function memoryCue(card) {
+  const lesson = curatedLessons[card.id];
+  if (lesson) {
+    return `<div class="quiz-cue curated-cue">
+      <span class="cue-kicker">反応する言葉</span>
+      <strong>${esc(lesson.cueTitle)}</strong>
+      <p>${renderRichText(hideAnswerText(card, lesson.cue))}</p>
+    </div>`;
+  }
+  const family = visualFamily(card.visual);
+  return `<div class="quiz-cue">
+    <span class="cue-kicker">連想ヒント</span>
+    <strong>${esc(clueLabel(card, family))}</strong>
+    <p>${esc(hideAnswerText(card, card.memory))}</p>
+  </div>`;
+}
+
+function memoryStoryHtml(card) {
+  const lesson = curatedLessons[card.id];
+  if (lesson) {
+    return `<div class="memory-story curated-story">
+      <section>
+        <span>語源・略語</span>
+        <p>${renderRichText(lesson.origin)}</p>
+      </section>
+      <section>
+        <span>たとえ</span>
+        <p>${renderRichText(lesson.analogy)}</p>
+      </section>
+      <section>
+        <span>選択肢の切り方</span>
+        <p>${renderRichText(lesson.choices)}</p>
+      </section>
+    </div>`;
+  }
+  const [origin, mnemonic] = termStory(card);
+  return `<div class="memory-story">
+    <section>
+      <span>語源・略語</span>
+      <p>${renderRichText(origin)}</p>
+    </section>
+    <section>
+      <span>覚え方</span>
+      <p>${renderRichText(mnemonic)}</p>
+    </section>
+  </div>`;
+}
+
 function fillSelect(select, values, allLabel) {
   select.innerHTML = `<option value="">${allLabel}</option>` + values.map((v) => `<option>${esc(v)}</option>`).join("");
 }
@@ -450,6 +889,30 @@ function applyFilters() {
 
 function currentCard() {
   return filtered[currentIndex] || cards[0];
+}
+
+function lessonDiagramHtml(card, reveal = true) {
+  const lesson = curatedLessons[card.id];
+  if (!lesson) return "";
+  const title = reveal ? card.answer : lesson.cueTitle;
+  const steps = lesson.scene.map((item, index) => `
+    <li>
+      <span>${index + 1}</span>
+      <b>${esc(item)}</b>
+    </li>
+  `).join("");
+  return `<div class="lesson-visual">
+    <div class="lesson-head">
+      <span>${esc(card.category)}</span>
+      <strong>${esc(title)}</strong>
+      <p>${renderRichText(lesson.cue)}</p>
+    </div>
+    <ol class="lesson-path">${steps}</ol>
+    <div class="lesson-check">
+      <span>選択肢で見る言葉</span>
+      <p>${renderRichText(lesson.choices)}</p>
+    </div>
+  </div>`;
 }
 
 function svgCard(inner, extraClass = "") {
@@ -508,7 +971,15 @@ function clueLabel(card, family) {
   if (family === "system") return "動かす仕組み";
   if (family === "trust") return "信用の確認";
   if (family === "security") return "守る仕組み";
-  return "働き";
+  return {
+    strategy: "選択肢の軸",
+    cycle: "流れの中心",
+    data: "データの特徴",
+    system: "仕組みの特徴",
+    trust: "確認の要点",
+    security: "守り方・攻撃型",
+    mechanism: "見分ける特徴",
+  }[family] || "見分ける特徴";
 }
 
 function conceptPiece(cls, label, sub = "") {
@@ -543,11 +1014,11 @@ function autoDiagram(card, head, answer, family) {
     system: "仕組みを動かす",
     strategy: "判断の軸を作る",
     cycle: "流れの中で使う",
-    mechanism: "働きで覚える",
-  }[family] || "働きで覚える";
+    mechanism: "特徴で覚える",
+  }[family] || "特徴で覚える";
   const roleLabel = clueLabel(card, family);
   const categoryLabel = shortClue(card.category, 13);
-  const memoryLabel = shortClue(easyText(card.memory), 18);
+  const memoryLabel = easyText(card.memory);
   const answerLabel = shortClue(answer, 14);
   const layouts = ["stack", "radar", "lane", "gate", "target", "map", "split", "deck", "meter", "ladder", "lab", "stamp"];
   const layout = layouts[stableNumber(`${card.id}:${card.visual}`) % layouts.length];
@@ -555,33 +1026,33 @@ function autoDiagram(card, head, answer, family) {
   const pieces = {
     stack: [
       conceptPiece("auto-topic top", categoryLabel, "分野"),
-      conceptPiece("auto-memory wide-card", memoryLabel, "合図"),
+      conceptPiece("auto-memory wide-card", memoryLabel, "覚える文"),
       conceptPiece("auto-role accent", roleLabel, familyLabel),
-      conceptPiece("auto-answer", answerLabel, "答え")
+      conceptPiece("auto-answer", answerLabel, "選択肢")
     ],
     radar: [
       conceptPiece("auto-role accent center", roleLabel, familyLabel),
       conceptPiece("auto-topic node-a", categoryLabel, "分野"),
-      conceptPiece("auto-memory node-b", memoryLabel, "合図"),
-      conceptPiece("auto-answer node-c", answerLabel, "答え")
+      conceptPiece("auto-memory node-b", memoryLabel, "覚える文"),
+      conceptPiece("auto-answer node-c", answerLabel, "選択肢")
     ],
     lane: [
       conceptPiece("auto-topic step-a", "入口", categoryLabel),
       conceptPiece("auto-role accent step-b", roleLabel, familyLabel),
-      conceptPiece("auto-memory step-c", memoryLabel, "合図"),
-      conceptPiece("auto-answer step-d", answerLabel, "答え")
+      conceptPiece("auto-memory step-c", memoryLabel, "覚える文"),
+      conceptPiece("auto-answer step-d", answerLabel, "選択肢")
     ],
     gate: [
       conceptPiece("auto-topic", categoryLabel, "条件"),
-      conceptPiece("auto-role accent gate-core", roleLabel, "判定"),
+      conceptPiece("auto-role accent gate-core", roleLabel, "見分け"),
       conceptPiece("auto-memory", memoryLabel, "手掛かり"),
-      conceptPiece("auto-answer", answerLabel, "名前")
+      conceptPiece("auto-answer", answerLabel, "用語")
     ],
     target: [
       conceptPiece("auto-role accent target-core", roleLabel, familyLabel),
       conceptPiece("auto-topic ring-one", categoryLabel, "文脈"),
-      conceptPiece("auto-memory ring-two", memoryLabel, "合図"),
-      conceptPiece("auto-answer ring-three", answerLabel, "答え")
+      conceptPiece("auto-memory ring-two", memoryLabel, "覚える文"),
+      conceptPiece("auto-answer ring-three", answerLabel, "選択肢")
     ],
     map: [
       conceptPiece("auto-topic map-start", categoryLabel, "ここから"),
@@ -593,25 +1064,25 @@ function autoDiagram(card, head, answer, family) {
       conceptPiece("auto-topic before", "問題文", categoryLabel),
       conceptPiece("auto-memory after accent", memoryLabel, "読み替え"),
       conceptPiece("auto-role bridge", roleLabel, familyLabel),
-      conceptPiece("auto-answer result", answerLabel, "答え")
+      conceptPiece("auto-answer result", answerLabel, "選択肢")
     ],
     deck: [
       conceptPiece("auto-topic card-one", categoryLabel, "分野"),
       conceptPiece("auto-role accent card-two", roleLabel, "2枚目"),
-      conceptPiece("auto-memory card-three", memoryLabel, "合図"),
-      conceptPiece("auto-answer card-four", answerLabel, "答え")
+      conceptPiece("auto-memory card-three", memoryLabel, "覚える文"),
+      conceptPiece("auto-answer card-four", answerLabel, "選択肢")
     ],
     meter: [
       conceptPiece("auto-topic meter-label", categoryLabel, "観点"),
       conceptPiece("auto-role accent meter-needle", roleLabel, familyLabel),
-      conceptPiece("auto-memory meter-read", memoryLabel, "合図"),
-      conceptPiece("auto-answer meter-name", answerLabel, "名前")
+      conceptPiece("auto-memory meter-read", memoryLabel, "覚える文"),
+      conceptPiece("auto-answer meter-name", answerLabel, "用語")
     ],
     ladder: [
       conceptPiece("auto-topic rung-a", categoryLabel, "分野"),
-      conceptPiece("auto-memory rung-b", memoryLabel, "合図"),
+      conceptPiece("auto-memory rung-b", memoryLabel, "覚える文"),
       conceptPiece("auto-role accent rung-c", roleLabel, familyLabel),
-      conceptPiece("auto-answer rung-d", answerLabel, "答え")
+      conceptPiece("auto-answer rung-d", answerLabel, "選択肢")
     ],
     lab: [
       conceptPiece("auto-topic lab-sample", categoryLabel, "材料"),
@@ -623,7 +1094,7 @@ function autoDiagram(card, head, answer, family) {
       conceptPiece("auto-topic paper-card", categoryLabel, "問題文"),
       conceptPiece("auto-role accent stamp-card", roleLabel, "印を押す"),
       conceptPiece("auto-memory memo-card", memoryLabel, "理由"),
-      conceptPiece("auto-answer name-card", answerLabel, "用語名")
+      conceptPiece("auto-answer name-card", answerLabel, "用語")
     ],
   }[layout];
   return conceptDiagram(head, cls, pieces);
@@ -1105,11 +1576,13 @@ function specificDiagram(card, head, answer, family) {
 }
 
 function diagramV2(card, reveal = false) {
+  const lesson = lessonDiagramHtml(card, reveal);
+  if (lesson) return lesson;
   const memory = esc(easyText(card.memory));
   const visual = card.visual;
   const family = visualFamily(visual);
   const answer = esc(reveal ? card.answer : clueLabel(card, family));
-  const headTitle = esc(reveal ? card.answer : "図で覚えるポイント");
+  const headTitle = esc(reveal ? card.answer : clueLabel(card, family));
   const head = `<div class="visual-head"><span class="visual-kind">${esc(card.category)}</span><strong>${headTitle}</strong><p>${memory}</p></div>`;
   const specific = specificDiagram(card, head, answer, family);
   if (specific) return specific;
@@ -1275,11 +1748,11 @@ function renderQuiz() {
   els.cardExam.textContent = card.exam;
   els.cardQno.textContent = `問${card.qno}`;
   els.cardCategory.textContent = card.category;
-  els.diagram.innerHTML = diagramV2(card, false);
-  els.questionText.textContent = prompt(card).replace(card.answer, "□□□");
+  els.diagram.innerHTML = memoryCue(card);
+  els.questionText.innerHTML = renderRichText(prompt(card).replace(card.answer, "□□□"));
   els.answerInput.value = "";
   els.feedback.className = "feedback";
-  els.feedback.innerHTML = `採用理由: ${esc(easyText(card.memory))}。このカードは暗記で選択肢を切れる論点だけに絞っています。`;
+  els.feedback.textContent = "";
   $("weakBtn").textContent = isWeak(card) ? "苦手解除" : "苦手";
 }
 
@@ -1292,8 +1765,9 @@ function renderLearn() {
     <div class="learn-grid">
       <div class="explain">
         <h2 class="learn-title">${esc(card.answer)}</h2>
-        <p>${esc(easyText(card.text))}</p>
-        <p><strong>こう覚える:</strong> ${esc(easyText(card.memory))}</p>
+        <p>${renderRichText(card.text)}</p>
+        <p><strong>こう覚える:</strong> ${renderRichText(card.memory)}</p>
+        ${memoryStoryHtml(card)}
         <p><strong>出題の手掛かり:</strong> ${esc(card.topic)}</p>
         <p><a href="${card.url}" target="_blank" rel="noreferrer">元問題を開く</a></p>
       </div>
@@ -1353,7 +1827,7 @@ function checkAnswer() {
 function revealAnswer() {
   const card = currentCard();
   els.feedback.className = "feedback";
-  els.feedback.innerHTML = `答えは <strong>${esc(card.answer)}</strong>。${esc(easyText(card.text))}`;
+  els.feedback.innerHTML = `答えは <strong>${esc(card.answer)}</strong>。${renderRichText(card.text)}`;
 }
 
 function move(delta) {
@@ -1401,6 +1875,20 @@ $("resetBtn").addEventListener("click", () => {
 });
 els.answerInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") checkAnswer();
+});
+document.addEventListener("click", (event) => {
+  const close = event.target.closest(".term-close");
+  if (close) {
+    close.closest(".term-note")?.remove();
+    return;
+  }
+
+  const termButton = event.target.closest(".term-link");
+  if (!termButton) return;
+  const entry = glossaryById[termButton.dataset.term];
+  if (!entry) return;
+  document.querySelectorAll(".term-note").forEach((note) => note.remove());
+  termButton.insertAdjacentHTML("afterend", glossaryNoteHtml(entry));
 });
 els.cardList.addEventListener("click", (event) => {
   const button = event.target.closest("[data-jump]");
