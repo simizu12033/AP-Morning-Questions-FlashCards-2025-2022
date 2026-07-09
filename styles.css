@@ -1691,6 +1691,68 @@ button.ghost {
 
 .explain strong { color: var(--accent-2); }
 
+.first-glance {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid #b9c6d6;
+  border-left: 6px solid var(--accent);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(15,139,141,.10), transparent 55%),
+    #ffffff;
+}
+
+.first-glance .focus-label,
+.primary-aid > span,
+.mistake-box > span {
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e6f1f2;
+  color: #0d696b;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.first-glance strong {
+  color: #12202d;
+  font-size: clamp(22px, 3vw, 32px);
+  line-height: 1.25;
+}
+
+.first-glance p {
+  margin: 0;
+  font-weight: 800;
+  line-height: 1.65;
+}
+
+.first-glance small {
+  color: #526274;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.detail-block {
+  border: 1px solid #d8e3ed;
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.detail-block summary {
+  cursor: pointer;
+  padding: 10px 12px;
+  color: #30455d;
+  font-weight: 900;
+  background: #f5f8fb;
+}
+
+.detail-block p {
+  margin: 0;
+  padding: 10px 12px;
+}
+
 .memory-story {
   display: grid;
   gap: 10px;
@@ -1770,6 +1832,68 @@ button.ghost {
 .contrast-box.compact {
   margin-top: 12px;
   background: #ffffff;
+}
+
+.primary-aid {
+  width: min(100%, 360px);
+  display: grid;
+  gap: 10px;
+  align-self: stretch;
+  padding: 16px;
+  border: 1px solid #cad8e5;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(24, 32, 42, .08);
+}
+
+.primary-aid strong {
+  color: #12202d;
+  font-size: 24px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.primary-aid p {
+  margin: 0;
+  line-height: 1.7;
+}
+
+.primary-aid .contrast-box {
+  padding: 10px;
+  box-shadow: none;
+}
+
+.aid-contrast {
+  border-left: 6px solid var(--accent-3);
+}
+
+.aid-origin {
+  border-left: 6px solid var(--accent-2);
+}
+
+.aid-example {
+  border-left: 6px solid var(--accent);
+}
+
+.mistake-box {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #e2b9b9;
+  border-left: 5px solid var(--bad);
+  border-radius: 8px;
+  background: #fffafa;
+}
+
+.mistake-box > span {
+  background: #fde2e2;
+  color: #8f2929;
+}
+
+.mistake-box p {
+  margin: 0;
+  line-height: 1.7;
 }
 
 .term-link {

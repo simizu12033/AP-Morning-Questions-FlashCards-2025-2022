@@ -1681,6 +1681,19 @@ function lessonFor(card) {
   return curatedLessons[card.id] || buildLesson(card);
 }
 
+function sharpTitle(card, lesson = lessonFor(card)) {
+  const weakTitles = new Set(["本物か確認", "データの仕組み", "仕組みの働き", "流れの中心", "見分ける特徴", "攻撃と防御"]);
+  if (!curatedLessons[card.id] && weakTitles.has(lesson.cueTitle)) return easyText(card.memory);
+  return lesson.cueTitle;
+}
+
+function cueBodyHtml(card, lesson = lessonFor(card)) {
+  const title = normalize(sharpTitle(card, lesson));
+  const cue = normalize(lesson.cue);
+  if (title && cue && title === cue) return "";
+  return `<p>${renderRichText(hideAnswerText(card, lesson.cue))}</p>`;
+}
+
 function contrastFor(card) {
   return contrastHints[card.id] || contrastHints[card.answer] || contrastHints[card.visual] || [];
 }
@@ -1702,6 +1715,80 @@ function contrastHtml(card, compact = false) {
   </section>`;
 }
 
+function learningStyle(card) {
+  const family = visualFamily(card.visual);
+  const contrasts = contrastFor(card);
+  if (contrasts.length >= 2 || ["strategy", "cycle"].includes(family)) {
+    return { key: "contrast", label: "対比で覚える", reason: "似た選択肢を切るのが得点に直結するカードです。" };
+  }
+  if (primaryExpansion(card) || /[A-Z]{2,}/.test(card.answer)) {
+    return { key: "origin", label: "語源で覚える", reason: "略語や英字の意味を展開すると、選択肢の語と結び付きます。" };
+  }
+  if (["crc", "stp", "fishbone", "sideChannel", "mvcc", "view", "starSchema", "twoPhaseCommit", "csmacd", "activity"].includes(card.visual)) {
+    return { key: "diagram", label: "図で覚える", reason: "動きや構造を目で見た方が一瞬で思い出しやすいカードです。" };
+  }
+  return { key: "example", label: "具体例で覚える", reason: "抽象語なので、場面に置き換える方が記憶に残ります。" };
+}
+
+function firstGlanceHtml(card) {
+  const lesson = lessonFor(card);
+  const style = learningStyle(card);
+  return `<section class="first-glance">
+    <span class="focus-label">まずこれ</span>
+    <strong>${esc(sharpTitle(card, lesson))}</strong>
+    ${cueBodyHtml(card, lesson)}
+    <small>${esc(style.label)}: ${esc(style.reason)}</small>
+  </section>`;
+}
+
+function primaryAidHtml(card) {
+  const lesson = lessonFor(card);
+  const style = learningStyle(card);
+  if (style.key === "contrast" && contrastFor(card).length) {
+    return `<div class="primary-aid aid-contrast">
+      <span>${esc(style.label)}</span>
+      <strong>${esc(sharpTitle(card, lesson))}</strong>
+      ${contrastHtml(card)}
+    </div>`;
+  }
+  if (style.key === "origin") {
+    return `<div class="primary-aid aid-origin">
+      <span>${esc(style.label)}</span>
+      <strong>${esc(card.answer)}</strong>
+      <p>${renderRichText(lesson.origin)}</p>
+      <p>${renderRichText(lesson.choices)}</p>
+    </div>`;
+  }
+  if (style.key === "example") {
+    return `<div class="primary-aid aid-example">
+      <span>${esc(style.label)}</span>
+      <strong>${esc(sharpTitle(card, lesson))}</strong>
+      <p>${renderRichText(lesson.analogy)}</p>
+      <p>${renderRichText(lesson.choices)}</p>
+    </div>`;
+  }
+  return diagramV2(card, true);
+}
+
+function mistakeHintHtml(card, rawAnswer) {
+  const typed = normalize(rawAnswer);
+  const rows = contrastFor(card);
+  if (!typed || !rows.length) return contrastHtml(card, true);
+  const matched = rows.find((row) => {
+    const term = normalize(row.term);
+    return term && (typed.includes(term) || term.includes(typed));
+  });
+  if (!matched) return contrastHtml(card, true);
+  return `<section class="mistake-box">
+    <span>その誤答ではない理由</span>
+    <p><strong>${esc(rowLabel(matched.term))}</strong> と迷ったら: ${renderRichText(matched.diff)}</p>
+  </section>`;
+}
+
+function rowLabel(value) {
+  return value;
+}
+
 function termStory(card) {
   const lesson = lessonFor(card);
   return [lesson.origin, `${lesson.analogy} ${lesson.choices}`];
@@ -1711,8 +1798,8 @@ function memoryCue(card) {
   const lesson = lessonFor(card);
   return `<div class="quiz-cue curated-cue">
     <span class="cue-kicker">連想ヒント</span>
-    <strong>${esc(lesson.cueTitle)}</strong>
-    <p>${renderRichText(hideAnswerText(card, lesson.cue))}</p>
+    <strong>${esc(sharpTitle(card, lesson))}</strong>
+    ${cueBodyHtml(card, lesson)}
   </div>`;
 }
 
@@ -2647,13 +2734,17 @@ function renderLearn() {
     <div class="learn-grid">
       <div class="explain">
         <h2 class="learn-title">${esc(card.answer)}</h2>
-        <p>${renderRichText(card.text)}</p>
-        <p><strong>こう覚える:</strong> ${renderRichText(card.memory)}</p>
+        ${firstGlanceHtml(card)}
+        <details class="detail-block">
+          <summary>詳しい説明</summary>
+          <p>${renderRichText(card.text)}</p>
+          <p><strong>こう覚える:</strong> ${renderRichText(card.memory)}</p>
+        </details>
         ${memoryStoryHtml(card)}
         <p><strong>出題の手掛かり:</strong> ${esc(card.topic)}</p>
         <p><a href="${card.url}" target="_blank" rel="noreferrer">元問題を開く</a></p>
       </div>
-      <div class="diagram">${diagramV2(card, true)}</div>
+      <div class="diagram">${primaryAidHtml(card)}</div>
     </div>`;
 }
 
@@ -2702,7 +2793,7 @@ function checkAnswer() {
   els.feedback.className = `feedback ${accepted ? "good" : "bad"}`;
   els.feedback.innerHTML = accepted
     ? `正解。答えは <strong>${esc(card.answer)}</strong> です。`
-    : `答えは <strong>${esc(card.answer)}</strong>。${esc(easyText(card.memory))} と覚えると選択肢を切れます。${contrastHtml(card, true)}`;
+    : `答えは <strong>${esc(card.answer)}</strong>。${esc(easyText(card.memory))} と覚えると選択肢を切れます。${mistakeHintHtml(card, els.answerInput.value)}`;
   saveProgress();
 }
 
